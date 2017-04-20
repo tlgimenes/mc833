@@ -6,27 +6,23 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <cstdio>
+#include <iostream>
 #include <string>
 
 ///////////////////////////////////////////////////////////////////////////////
 
-enum log_level_t {
-  DEBUG,
-  WARNING,
-  FAIL,
-  INFO
-};
+using log_level_t = enum log_level_t { FAIL, WARNING, INFO, DEBUG };
 
 ///////////////////////////////////////////////////////////////////////////////
 
 class log {
   public:
-    static log_level_t _log_level;
+    static log_level_t log_level;
 
-    static void write(log_level_t level=DEBUG, const std::string& msg) {
+    static void write(log_level_t level=DEBUG, const std::string& msg="Unknown") {
       std::string final_msg;
 
-      if(level > log::_log_level) {
+      if(level <= log::log_level) {
         switch(level) {
           case DEBUG:
             std::cout << "[DEBUG]: " << msg << std::endl;
@@ -45,7 +41,11 @@ class log {
       }
     }
 
-    static log_level_t& level() { return _log_level; }
+    static log_level_t& level() { return log_level; }
 };
+
+///////////////////////////////////////////////////////////////////////////////
+
+log_level_t log::log_level = INFO;
 
 ///////////////////////////////////////////////////////////////////////////////
