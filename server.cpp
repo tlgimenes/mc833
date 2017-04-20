@@ -156,6 +156,8 @@ int main()
       // Receives data from client at a max of MAX_LINE bytes and sets buffer buf
       int n = read(client_fd, buf);
 
+      if(n==0) break; // Something bad happened to client
+
       // Shows client message on screen
       std::cout << "Client says: " << std::string(buf);
       std::cout.flush();
