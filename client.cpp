@@ -46,10 +46,10 @@ int main(int argc, char * argv[])
 
   // Checks given arguments
   if (argc < 2) {
-      log::write(FAIL, "Missing hostname argument");
+    log::write(FAIL, "Missing hostname argument");
   }
   else if (argc > 2) {
-      log::write(FAIL, "Too many arguments");
+    log::write(FAIL, "Too many arguments");
   }
 
   // Gets address from host name
@@ -57,7 +57,7 @@ int main(int argc, char * argv[])
   host_address = gethostbyname(host);
 
   if (host_address == NULL) {
-      log::write(FAIL, "No host found with given name");
+    log::write(FAIL, "No host found with given name");
   }
 
   // Creates socket address structure
@@ -78,10 +78,10 @@ int main(int argc, char * argv[])
   std::string local_ip(inet_ntoa(socket_address.sin_addr));
 
   if (ret >= 0) {
-      log::write(DEBUG, "Socket " + std::to_string(server_fd) + " was connected");
+    log::write(DEBUG, "Socket " + std::to_string(server_fd) + " was connected");
   }
   else {
-      log::write(FAIL, std::strerror(errno));
+    log::write(FAIL, std::strerror(errno));
   }
 
   do {
@@ -89,22 +89,23 @@ int main(int argc, char * argv[])
 
     bzero(buf, sizeof(char)*MAX_LINE);
     std::getline(std::cin, str_in);
+    str_in += '\n';
     len = str_in.size();
-    
+
     int n = write(server_fd, str_in.c_str(), len);
-    
+
     if (n <= 0) {
-        log::write(FAIL, "Fail to write to server");
+      log::write(FAIL, "Fail to write to server");
     }
 
     n = read(server_fd, buf, MAX_LINE);
-    
+
     if (n <= 0) {
-        log::write(FAIL, "Fail to read from server");
+      log::write(FAIL, "Fail to read from server");
     }
 
-    std::cout << std::string(buf) << std::endl;
-  } while(std::strcmp(buf, "exit\r\n") && std::strcmp(buf, "exit\n"));
+    std::cout << std::string(buf);
+  } while(std::strcmp(str_in.c_str(), "exit\n"));
 
   close(server_fd);
 
