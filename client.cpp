@@ -74,8 +74,11 @@ int main(int argc, char * argv[])
   int ret = connect(server_fd, (struct sockaddr*)&socket_address, sizeof(socket_address));
 
   // Gets local port and IP info
-  int local_port = socket_address.sin_port;
-  std::string local_ip(inet_ntoa(socket_address.sin_addr));
+  struct sockaddr_in local_address;
+  socklen_t local_len;
+  getsockname(server_fd, (struct sockaddr *)&local_address, &local_len);
+  int local_port = local_address.sin_port;
+  std::string local_ip(inet_ntoa(local_address.sin_addr));
 
   if (ret >= 0) {
     log::write(DEBUG, "Socket " + std::to_string(server_fd) + " was connected");
