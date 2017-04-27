@@ -24,6 +24,7 @@
 #include <vector>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <arpa/inet.h>
 
 #include "utils.hpp"
 
@@ -123,8 +124,36 @@ int read(int fd, char* buff) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// Converts the remote port on client to string
+std::string port_from_fd(int fd) {
+  struct sockaddr_in addr;
+  socklen_t addr_size = sizeof(struct sockaddr_in);
 
+  if(getpeername(fd, (struct sockaddr *)&addr, &addr_size) != 0) {
+    log::write(FAIL, std::strerror(errno));
+  }
+
+  return std::to_string(ntohs(addr.sin_port));
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Converts the remote client ip address to string
+std::string ip_from_fd(int fd) {
+  struct sockaddr_in addr;
+  socklen_t addr_size = sizeof(struct sockaddr_in);
+
+  if(getpeername(fd, (struct sockaddr *)&addr, &addr_size) != 0) {
+    log::write(FAIL, std::strerror(errno));
+  }
+
+  return std::string(inet_ntoa(addr.sin_addr));
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Handles the client. This function does the reads and writes and communicates 
+// with the client. This function should run on a child proccess
 void client_handler(int client_fd) {
+  std::string client_ip = ip_from_fd(client_fd);
   char buf[MAX_LINE];
 
   do {
@@ -137,7 +166,7 @@ void client_handler(int client_fd) {
     if(n==0) break; // Something bad happened to client
 
     // Shows client message on screen
-    std::cout << "Client says: " << std::string(buf) << std::endl;
+    std::cout << "[" << client_ip << "]" << " says: " << std::string(buf) << std::endl;
     std::cout.flush();
 
     // Echoes back to client
@@ -155,7 +184,7 @@ void client_handler(int client_fd) {
 
 int main()
 {
-  std::vector<int> childs;
+  std::vector<int> childs; // childs proccess ids
 
   // Sets verbose level. If compiled in debug mode, show all messages, else
   // show only FAIL errors 
@@ -179,14 +208,17 @@ int main()
     // Accepts new connections
     int client_fd = accept(socket_fd);
 
+    std::cout << "Client [" << ip_from_fd(client_fd) << ":" << 
+      port_from_fd(client_fd) << "] connected !" << std::endl;
+
     int pid = fork();
-    if(pid > 0) {
+    if(pid > 0) { // if we are the server, store its childs pids
       childs.push_back(pid);
     }
-    else if(pid == 0) {
+    else if(pid == 0) { // if we are the child, handle the client
       client_handler(client_fd);
     }
-    else {
+    else { // on error, fail !!
       log::write(FAIL, std::strerror(errno));
     }
 
