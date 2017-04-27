@@ -91,8 +91,7 @@ void listen(int socket) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // Waits for new connections
-int accept(int socket) {
-  struct sockaddr_in address;
+int accept(int socket, struct sockaddr_in& address) {
   socklen_t addrlen = sizeof(address);
 
   int fd = accept(socket, (struct sockaddr*) &address, &addrlen);
@@ -104,6 +103,9 @@ int accept(int socket) {
     log::write(FAIL, std::strerror(errno));
   }
 
+  std::cout << "Client [" << inet_ntoa(address.sin_addr) << ":";
+  std::cout << ntohs(address.sin_port) << "] connected !" << std::endl;
+  
   return fd;
 }
 
@@ -124,36 +126,11 @@ int read(int fd, char* buff) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Converts the remote port on client to string
-std::string port_from_fd(int fd) {
-  struct sockaddr_in addr;
-  socklen_t addr_size = sizeof(struct sockaddr_in);
-
-  if(getpeername(fd, (struct sockaddr *)&addr, &addr_size) != 0) {
-    log::write(FAIL, std::strerror(errno));
-  }
-
-  return std::to_string(ntohs(addr.sin_port));
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// Converts the remote client ip address to string
-std::string ip_from_fd(int fd) {
-  struct sockaddr_in addr;
-  socklen_t addr_size = sizeof(struct sockaddr_in);
-
-  if(getpeername(fd, (struct sockaddr *)&addr, &addr_size) != 0) {
-    log::write(FAIL, std::strerror(errno));
-  }
-
-  return std::string(inet_ntoa(addr.sin_addr));
-}
-
-///////////////////////////////////////////////////////////////////////////////
 // Handles the client. This function does the reads and writes and communicates 
 // with the client. This function should run on a child proccess
-void client_handler(int client_fd) {
-  std::string client_ip = ip_from_fd(client_fd);
+void client_handler(int client_fd, struct sockaddr_in address) {
+  std::string ip = inet_ntoa(address.sin_addr);
+  std::string port = std::to_string(ntohs(address.sin_port));
   char buf[MAX_LINE];
 
   do {
@@ -166,7 +143,7 @@ void client_handler(int client_fd) {
     if(n==0) break; // Something bad happened to client
 
     // Shows client message on screen
-    std::cout << "[" << client_ip << "]" << " says: " << std::string(buf) << std::endl;
+    std::cout << "[" << ip << ":" << port << "]" << " says: " << std::string(buf) << std::endl;
     std::cout.flush();
 
     // Echoes back to client
@@ -177,7 +154,9 @@ void client_handler(int client_fd) {
     else { // On fail, print error
       log::write(FAIL, std::strerror(errno));
     }
-  } while(std::strcmp(buf, "exit\r\n") && std::strcmp(buf, "exit\n"));
+  } while(std::strcmp(buf, "exit\r\n") && std::strcmp(buf, "exit\n") && std::strcmp(buf, "exit"));
+
+  log::write(DEBUG, "Child process finished");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -205,18 +184,18 @@ int main()
 
   // Server's main loop
   while(true) {
-    // Accepts new connections
-    int client_fd = accept(socket_fd);
+    // Socket address
+    struct sockaddr_in address;
 
-    std::cout << "Client [" << ip_from_fd(client_fd) << ":" << 
-      port_from_fd(client_fd) << "] connected !" << std::endl;
+    // Accepts new connections
+    int client_fd = accept(socket_fd, address);
 
     int pid = fork();
     if(pid > 0) { // if we are the server, store its childs pids
       childs.push_back(pid);
     }
     else if(pid == 0) { // if we are the child, handle the client
-      client_handler(client_fd);
+      client_handler(client_fd, address);
     }
     else { // on error, fail !!
       log::write(FAIL, std::strerror(errno));
