@@ -23,6 +23,7 @@
 #include <cassert>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <arpa/inet.h>
 
 #include "utils.hpp"
 
@@ -72,6 +73,10 @@ int main(int argc, char * argv[])
   // Connects to server
   int ret = connect(server_fd, (struct sockaddr*)&socket_address, sizeof(socket_address));
 
+  // Gets local port and IP info
+  int local_port = socket_address.sin_port;
+  std::string local_ip(inet_ntoa(socket_address.sin_addr));
+
   if (ret >= 0) {
       log::write(DEBUG, "Socket " + std::to_string(server_fd) + " was connected");
   }
@@ -80,6 +85,8 @@ int main(int argc, char * argv[])
   }
 
   do {
+    std::cout << "[" << local_ip << ":" << local_port << "] ";
+
     bzero(buf, sizeof(char)*MAX_LINE);
     std::getline(std::cin, str_in);
     len = str_in.size();
