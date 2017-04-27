@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  authors: Tiago Lobato Gimenes (118827)
-//           Renato Landim Vargas (118557)
+//           Ingrato
 //
 ///////////////////////////////////////////////////////////////////////////////
 /* 
@@ -21,6 +21,7 @@
 #include <unistd.h>
 #include <netdb.h>
 #include <cassert>
+#include <vector>
 #include <sys/types.h>
 #include <sys/socket.h>
 
@@ -123,9 +124,38 @@ int read(int fd, char* buff) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
+void client_handler(int client_fd) {
+  char buf[MAX_LINE];
+
+  do {
+    // Clear the string
+    bzero(buf, sizeof(char)*MAX_LINE);
+
+    // Receives data from client at a max of MAX_LINE bytes and sets buffer buf
+    int n = read(client_fd, buf);
+
+    if(n==0) break; // Something bad happened to client
+
+    // Shows client message on screen
+    std::cout << "Client says: " << std::string(buf) << std::endl;
+    std::cout.flush();
+
+    // Echoes back to client
+    n = write(client_fd, buf, n);
+    if(n >= 0) { // On success, log
+      log::write(DEBUG, "Wrote " + std::to_string(n) + " bytes to client");
+    }
+    else { // On fail, print error
+      log::write(FAIL, std::strerror(errno));
+    }
+  } while(std::strcmp(buf, "exit\r\n") && std::strcmp(buf, "exit\n"));
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 int main()
 {
-  char buf[MAX_LINE];
+  std::vector<int> childs;
 
   // Sets verbose level. If compiled in debug mode, show all messages, else
   // show only FAIL errors 
@@ -149,28 +179,16 @@ int main()
     // Accepts new connections
     int client_fd = accept(socket_fd);
 
-    do {
-      // Clear the string
-      bzero(buf, sizeof(char)*MAX_LINE);
-
-      // Receives data from client at a max of MAX_LINE bytes and sets buffer buf
-      int n = read(client_fd, buf);
-
-      if(n==0) break; // Something bad happened to client
-
-      // Shows client message on screen
-      std::cout << "Client says: " << std::string(buf);
-      std::cout.flush();
-
-      // Echoes back to client
-      n = write(client_fd, buf, n);
-      if(n >= 0) { // On success, log
-        log::write(DEBUG, "Wrote " + std::to_string(n) + " bytes to client");
-      }
-      else { // On fail, print error
-        log::write(FAIL, std::strerror(errno));
-      }
-    } while(std::strcmp(buf, "exit\r\n") && std::strcmp(buf, "exit\n"));
+    int pid = fork();
+    if(pid > 0) {
+      childs.push_back(pid);
+    }
+    else if(pid == 0) {
+      client_handler(client_fd);
+    }
+    else {
+      log::write(FAIL, std::strerror(errno));
+    }
 
     // Closes connection
     close(client_fd);
