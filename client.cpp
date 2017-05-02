@@ -37,10 +37,14 @@
 int socket() {
   int fd = socket(AF_INET, SOCK_STREAM, 0);
 
-  if (fd >= 0) {
+  // Sets option to reuse socket
+  int optval = 1;
+  int opt = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+
+  if (fd >= 0 && opt >= 0) { // On success, print new file descriptor
     log::write(DEBUG, "Socket " + std::to_string(fd) + " created successfully");
   }
-  else {
+  else { // On fail, print error
     log::write(FAIL, std::strerror(errno));
   }
 
@@ -89,7 +93,6 @@ int main(int argc, char * argv[])
   // In case no host is found
   if (host_address == NULL) {
     log::write(FAIL, "No host found with given name");
-    return EXIT_FAILURE;
   }
 
   // Creates active socket
