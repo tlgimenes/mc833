@@ -79,6 +79,14 @@ int main(int argc, char * argv[])
   char buf[MAX_LINE];
   std::string str_in, local_port, local_ip;
 
+  // Sets verbose level. If compiled in debug mode, show all messages, else
+  // show only FAIL errors
+#ifdef NDEBUG
+  log::level() = FAIL;
+#else
+  log::level() = DEBUG;
+#endif
+
   // Checks given arguments
   if (argc < 2) {
     log::write(FAIL, "Missing hostname argument");
