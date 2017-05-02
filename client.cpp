@@ -122,8 +122,15 @@ int main(int argc, char * argv[])
     // Clears the string
     bzero(buf, sizeof(char)*MAX_LINE);
 
-    // Reads console input and get string length
+    // Reads console input
     std::getline(std::cin, str_in);
+
+    // Truncates if string is too big
+    if (str_in.size() >= MAX_LINE) {
+      str_in.resize(MAX_LINE - 1);
+    }
+
+    // Adds newline and gets string length
     str_in += '\n';
     int n = str_in.size();
 
