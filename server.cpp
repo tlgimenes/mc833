@@ -45,7 +45,7 @@ int socket() {
   int optval = 1;
   int opt = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
 
-  if(fd >= 0 && opt >= 0) { // On success, print new file descriptor
+  if (fd >= 0 && opt >= 0) { // On success, print new file descriptor
     log::write(DEBUG, "Socket " + std::to_string(fd) + " created successfully");
   }
   else { // On fail, print error
@@ -69,7 +69,7 @@ void bind(int socket) {
 
   int ret = bind(socket, (struct sockaddr*) &address, sizeof(address));
 
-  if(ret >= 0) { // On success, log 
+  if (ret >= 0) { // On success, log
     log::write(DEBUG, "Socket " + std::to_string(socket) + " binded to port " + std::to_string(LISTEN_PORT) + " successfully");
   }
   else { // On fail, print error
@@ -82,7 +82,7 @@ void bind(int socket) {
 void listen(int socket) {
   int ret = listen(socket, MAX_PENDING);
 
-  if(ret >= 0) { // On success, log
+  if (ret >= 0) { // On success, log
     log::write(DEBUG, "Socket " + std::to_string(socket) + " is listenning for new connections");
   }
   else { // On fail, print error
@@ -97,7 +97,7 @@ int accept(int socket, struct sockaddr_in& address) {
 
   int fd = accept(socket, (struct sockaddr*) &address, &addrlen);
 
-  if(fd >= 0) { // On success, log
+  if (fd >= 0) { // On success, log
     log::write(DEBUG, "New connection accepted: " + std::to_string(fd));
   }
   else { // On fail, print error
@@ -116,7 +116,7 @@ int accept(int socket, struct sockaddr_in& address) {
 int read(int fd, char* buff) {
   int n = read(fd, buff, MAX_LINE);
   
-  if(n >= 0) { // On success, log
+  if (n >= 0) { // On success, log
     log::write(DEBUG, "Received " + std::to_string(n) + " bytes");
   }
   else { // On fail, print error
