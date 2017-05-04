@@ -24,6 +24,7 @@
 #include <vector>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/select.h>
 #include <arpa/inet.h>
 
 #include "utils.hpp"
@@ -104,7 +105,7 @@ int accept(int socket, struct sockaddr_in& address) {
   }
 
   std::cout << "Client [" << inet_ntoa(address.sin_addr) << ":";
-  std::cout << ntohs(address.sin_port) << "] connected !" << std::endl;
+  std::cout << ntohs(address.sin_port) << "] connected!" << std::endl;
   
   return fd;
 }
@@ -128,42 +129,48 @@ int read(int fd, char* buff) {
 ///////////////////////////////////////////////////////////////////////////////
 // Handles the client. This function does the reads and writes and communicates 
 // with the client. This function should run on a child proccess
-void client_handler(int client_fd, struct sockaddr_in address) {
+bool client_handler(int client_fd, struct sockaddr_in address) {
   std::string ip = inet_ntoa(address.sin_addr);
   std::string port = std::to_string(ntohs(address.sin_port));
   char buf[MAX_LINE];
 
-  do {
-    // Clear the string
-    bzero(buf, sizeof(char)*MAX_LINE);
+  // Clear the string
+  bzero(buf, sizeof(char)*MAX_LINE);
 
-    // Receives data from client at a max of MAX_LINE bytes and sets buffer buf
-    int n = read(client_fd, buf);
+  // Receives data from client at a max of MAX_LINE bytes and sets buffer buf
+  int n = read(client_fd, buf);
 
-    if(n==0) break; // Something bad happened to client
+  if (n==0) return false; // Something bad happened to client
 
-    // Shows client message on screen
-    std::cout << "[" << ip << ":" << port << "]" << " says: " << std::string(buf) << std::endl;
-    std::cout.flush();
+  // Shows client message on screen
+  std::cout << "[" << ip << ":" << port << "]" << " says: " << std::string(buf) << std::endl;
+  std::cout.flush();
 
-    // Echoes back to client
-    n = write(client_fd, buf, n);
-    if(n >= 0) { // On success, log
-      log::write(DEBUG, "Wrote " + std::to_string(n) + " bytes to client");
-    }
-    else { // On fail, print error
-      log::write(FAIL, std::strerror(errno));
-    }
-  } while(std::strcmp(buf, "exit\r\n") && std::strcmp(buf, "exit\n") && std::strcmp(buf, "exit"));
+  // Echoes back to client
+  n = write(client_fd, buf, n);
+  if (n >= 0) { // On success, log
+    log::write(DEBUG, "Wrote " + std::to_string(n) + " bytes to client");
+  }
+  else { // On fail, print error
+    log::write(FAIL, std::strerror(errno));
+  }
 
-  log::write(DEBUG, "Child process finished");
+  // Client has exited
+  if (!std::strcmp(buf, "exit\r\n") || !std::strcmp(buf, "exit\n") || !std::strcmp(buf, "exit")) {
+    return false;
+  }
+
+  log::write(DEBUG, "Echoed to client [" + ip + ":" + port + "] successfully");
+  return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
 int main()
 {
-  std::vector<int> childs; // childs proccess ids
+  struct sockaddr_in address;
+  int i, max_fd, n_clients, clients[FD_SETSIZE];
+  fd_set all_fds, new_set;
 
   // Sets verbose level. If compiled in debug mode, show all messages, else
   // show only FAIL errors 
@@ -182,27 +189,80 @@ int main()
   //  Listen the socket for accepting connections
   listen(socket_fd);
 
+  // Initializes variables
+  n_clients = -1;
+  for (i = 0; i < FD_SETSIZE; i++) {
+    clients[i] = -1;
+  }
+  FD_ZERO(&all_fds);
+
+  // Adds server socket to the set
+  max_fd = socket_fd;
+  FD_SET(socket_fd, &all_fds);
+
   // Server's main loop
-  while(true) {
-    // Socket address
-    struct sockaddr_in address;
+  while (true) {
+    // Creates copy of all_fds
+    new_set = all_fds;
 
-    // Accepts new connections
-    int client_fd = accept(socket_fd, address);
+    // Checks how many clients have data
+    int nready = select(max_fd + 1, &new_set, NULL, NULL, NULL);
 
-    int pid = fork();
-    if(pid > 0) { // if we are the server, store its childs pids
-      childs.push_back(pid);
-    }
-    else if(pid == 0) { // if we are the child, handle the client
-      client_handler(client_fd, address);
-    }
-    else { // on error, fail !!
+    // Exits in case of error on select
+    if (nready < 0) {
       log::write(FAIL, std::strerror(errno));
     }
 
-    // Closes connection
-    close(client_fd);
+    // Checks if new client is trying to connect
+    if (FD_ISSET(socket_fd, &new_set)) {
+      // Accepts new connection
+      int client_fd = accept(socket_fd, address);
+
+      // Saves file descriptor on vector
+      for (i = 0; i < FD_SETSIZE; i++) {
+        if (clients[i] < 0) {
+          clients[i] = client_fd;
+          break;
+        }
+      }
+
+      // Disconnects client if max number of clients is reached
+      if (i == FD_SETSIZE) {
+        close(client_fd);
+      }
+
+      // Adds client file descriptor to the set
+      FD_SET(client_fd, &all_fds);
+
+      if (client_fd > max_fd)
+        max_fd = client_fd; // Updates max file descriptor
+      if (i > n_clients)
+        n_clients = i; // Updates max index on vector
+      if (--nready <= 0)
+        continue; // There aren't and file descriptors to be read
+    }
+
+    // Verifies which clients have data to be read and proccess it
+    for (i = 0; i <= n_clients; i++) {
+      // Gets valid client file descriptor
+      int client_fd = clients[i];
+      if (client_fd < 0) continue;
+
+      // Checks if client has data
+      if (FD_ISSET(client_fd, &new_set)) {
+        // Tries to read from client and echo message
+        if (!client_handler(client_fd, address)) {
+          // Closes connection if client has disconnected
+          close(client_fd);
+          FD_CLR(client_fd, &all_fds);
+          clients[i] = -1;
+          log::write(DEBUG, "Socket " + std::to_string(client_fd) + " has been disconnected");
+        }
+
+        // There aren't and file descriptors to be read
+        if (--nready <= 0) break;
+      }
+    }
   }
 
   // Closes socket
