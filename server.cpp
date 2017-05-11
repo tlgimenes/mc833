@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  authors: Tiago Lobato Gimenes (118827)
-//           Ingrato
+//           Renato Landim Vargas (118557)
 //
 ///////////////////////////////////////////////////////////////////////////////
 /* 
@@ -38,14 +38,14 @@
 // Creates a new socket
 int socket() {
   // Creates socket
-  int fd = socket(AF_INET, SOCK_STREAM, 0);
+  int fd = socket(AF_INET, SOCK_DGRAM, 0);
   
   // Sets option to reuse socket 
   int optval = 1;
   int opt = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
 
   if(fd >= 0 && opt >= 0) { // On success, print new file descriptor
-    log::write(DEBUG, "Socket " + std::to_string(fd) + " created successfully");
+    log::write(DEBUG, "UDP socket " + std::to_string(fd) + " created successfully");
   }
   else { // On fail, print error
     log::write(FAIL, std::strerror(errno));
@@ -77,93 +77,12 @@ void bind(int socket) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-//  Listen the socket for accepting connections
-void listen(int socket) {
-  int ret = listen(socket, MAX_PENDING);
-
-  if(ret >= 0) { // On success, log
-    log::write(DEBUG, "Socket " + std::to_string(socket) + " is listenning for new connections");
-  }
-  else { // On fail, print error
-    log::write(FAIL, std::strerror(errno));
-  }
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// Waits for new connections
-int accept(int socket, struct sockaddr_in& address) {
-  socklen_t addrlen = sizeof(address);
-
-  int fd = accept(socket, (struct sockaddr*) &address, &addrlen);
-
-  if(fd >= 0) { // On success, log
-    log::write(DEBUG, "New connection accepted: " + std::to_string(fd));
-  }
-  else { // On fail, print error
-    log::write(FAIL, std::strerror(errno));
-  }
-
-  std::cout << "Client [" << inet_ntoa(address.sin_addr) << ":";
-  std::cout << ntohs(address.sin_port) << "] connected !" << std::endl;
-  
-  return fd;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// Receives data from client at a max of MAX_LINE bytes and puts it into the 
-// buffer buf
-int read(int fd, char* buff) {
-  int n = read(fd, buff, MAX_LINE);
-  
-  if(n >= 0) { // On success, log
-    log::write(DEBUG, "Received " + std::to_string(n) + " bytes");
-  }
-  else { // On fail, print error
-    log::write(FAIL, std::strerror(errno));
-  }
-
-  return n;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// Handles the client. This function does the reads and writes and communicates 
-// with the client. This function should run on a child proccess
-void client_handler(int client_fd, struct sockaddr_in address) {
-  std::string ip = inet_ntoa(address.sin_addr);
-  std::string port = std::to_string(ntohs(address.sin_port));
-  char buf[MAX_LINE];
-
-  do {
-    // Clear the string
-    bzero(buf, sizeof(char)*MAX_LINE);
-
-    // Receives data from client at a max of MAX_LINE bytes and sets buffer buf
-    int n = read(client_fd, buf);
-
-    if(n==0) break; // Something bad happened to client
-
-    // Shows client message on screen
-    std::cout << "[" << ip << ":" << port << "]" << " says: " << std::string(buf) << std::endl;
-    std::cout.flush();
-
-    // Echoes back to client
-    n = write(client_fd, buf, n);
-    if(n >= 0) { // On success, log
-      log::write(DEBUG, "Wrote " + std::to_string(n) + " bytes to client");
-    }
-    else { // On fail, print error
-      log::write(FAIL, std::strerror(errno));
-    }
-  } while(std::strcmp(buf, "exit\r\n") && std::strcmp(buf, "exit\n") && std::strcmp(buf, "exit"));
-
-  log::write(DEBUG, "Child process finished");
-}
-
-///////////////////////////////////////////////////////////////////////////////
 
 int main()
 {
-  std::vector<int> childs; // childs proccess ids
+  struct sockaddr_in cli_addr; // client address
+  char buf[MAX_LINE];          // received buffer
+  socklen_t cli_len;           // client address length
 
   // Sets verbose level. If compiled in debug mode, show all messages, else
   // show only FAIL errors 
@@ -179,30 +98,32 @@ int main()
   // Binds the socket to the descriptor
   bind(socket_fd);
 
-  //  Listen the socket for accepting connections
-  listen(socket_fd);
-
   // Server's main loop
   while(true) {
-    // Socket address
-    struct sockaddr_in address;
+    // Clear the string
+    bzero(buf, sizeof(char)*MAX_LINE);
 
-    // Accepts new connections
-    int client_fd = accept(socket_fd, address);
+    // Receives data from client at a max of MAX_LINE bytes and sets buffer buf
+    ssize_t n = recvfrom(socket_fd, buf, sizeof(char)*MAX_LINE, 0, (struct sockaddr*)&cli_addr, &cli_len);
+    // If didn't receive anything or if something bad happend to client
+    if(n==0) continue;
 
-    int pid = fork();
-    if(pid > 0) { // if we are the server, store its childs pids
-      childs.push_back(pid);
+    // Clients ip and port
+    std::string ip = inet_ntoa(cli_addr.sin_addr);
+    std::string port = std::to_string(ntohs(cli_addr.sin_port));
+
+    // Shows client message on screen
+    std::cout << "[" << ip << ":" << port << "]" << " says: " << std::string(buf) << std::endl;
+    std::cout.flush();
+
+    // Echoes back to client
+    n = sendto(socket_fd, buf, sizeof(char)*n, 0, (const struct sockaddr *)&cli_addr, cli_len);
+    if(n >= 0) { // On success, log
+      log::write(DEBUG, "Wrote " + std::to_string(n) + " bytes to client");
     }
-    else if(pid == 0) { // if we are the child, handle the client
-      client_handler(client_fd, address);
-    }
-    else { // on error, fail !!
+    else { // On fail, print error
       log::write(FAIL, std::strerror(errno));
     }
-
-    // Closes connection
-    close(client_fd);
   }
 
   // Closes socket
