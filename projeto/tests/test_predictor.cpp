@@ -23,21 +23,13 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void test2()
+void test0()
 {
-  log::write(INFO, "Starting test2 - Test add_car and exists ... ");
-
-  car c1(0, 2, car::HORIZONTAL), c2(0, 1, car::VERTICAL);
+  log::write(INFO, "Starting test0 - Test predictor constructor ... ");
+  
   predictor pred(10, 12, 8, 9);
   
-  pred.add_car(c1);
-
-  test(pred.exists(c1) == true);
-  test(pred.exists(c2) == false);
-  
-  pred.add_car(c2);
-  
-  test(pred.exists(c2) == true);
+  test(pred.cars_v.size() == 0 && pred.cars_h.size() == 0);
   
   log::write(INFO, "pass");
 }
@@ -62,13 +54,21 @@ void test1()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void test0()
+void test2()
 {
-  log::write(INFO, "Starting test0 - Test predictor constructor ... ");
-  
+  log::write(INFO, "Starting test2 - Test add_car and exists ... ");
+
+  car c1(0, 2, car::HORIZONTAL), c2(0, 1, car::VERTICAL);
   predictor pred(10, 12, 8, 9);
   
-  test(pred.cars.size() == 0);
+  pred.add_car(c1);
+
+  test(pred.exists(c1) == true);
+  test(pred.exists(c2) == false);
+  
+  pred.add_car(c2);
+  
+  test(pred.exists(c2) == true);
   
   log::write(INFO, "pass");
 }
@@ -95,6 +95,40 @@ void test3()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void test4()
+{
+  log::write(INFO, "Starting test4 - Test collision avoidance ... ");
+
+  car c(0,0,car::HORIZONTAL);
+  car::action ac;
+  
+  predictor pred(50, 60, 60, 74);
+
+  pred.add_car(c = car(20, 2, car::HORIZONTAL));
+  test(pred.update(c) == car::KEEP);
+
+  pred.add_car(c = car(20, 2, car::VERTICAL));
+  test((ac=pred.update(c)) != car::KEEP && ac != car::AMBULANCE);
+
+  pred.add_car(c = car(45, 1, car::HORIZONTAL));
+  test((ac=pred.update(c)) == car::AMBULANCE);
+  
+  pred.add_car(c = car(90, 1, car::VERTICAL));
+  test((ac=pred.update(c)) == car::KEEP);
+  
+  pred.add_car(c = car(75, 1, car::HORIZONTAL));
+  test((ac=pred.update(c)) == car::KEEP);
+
+  pred.add_car(c = car(45, 10, car::VERTICAL));
+  test((ac=pred.update(c)) == car::KEEP);
+
+  pred.draw();
+  
+  log::write(INFO, "pass");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 int main(int argc, char** argv) 
 {
   log::log_level = DEBUG;
@@ -104,6 +138,8 @@ int main(int argc, char** argv)
   test1();
   test2();
   test3();
+
+  test4();
 
   return EXIT_SUCCESS;
 }

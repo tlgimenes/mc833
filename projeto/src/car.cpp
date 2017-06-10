@@ -27,7 +27,8 @@ int car::ncars = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-car::car(int pos, int speed, car::direction dir): dir(dir), pos(pos), speed(speed)
+car::car(int pos, int speed, car::direction dir, int size): 
+  dir(dir), pos(pos), speed(speed), size(size)
 {
   
   if(!car::ncars) srand(std::chrono::high_resolution_clock::now().time_since_epoch().count());
@@ -39,7 +40,7 @@ car::car(int pos, int speed, car::direction dir): dir(dir), pos(pos), speed(spee
 ////////////////////////////////////////////////////////////////////////////////
 
 car::car(const car& c) :
-  pos(c.pos), speed(c.speed), id(c.id), dir(c.dir)
+  pos(c.pos), speed(c.speed), id(c.id), dir(c.dir), size(c.size)
 {
 }
 
@@ -50,7 +51,7 @@ car::car(const std::string& str)
   std::stringstream sstr(str);
   int sdir;
 
-  sstr >> sdir >> pos >> speed >> id;
+  sstr >> sdir >> pos >> speed >> id >> size;
 
   dir = (car::direction)sdir;
 }
@@ -61,7 +62,7 @@ std::string car::to_string()
 {
   std::stringstream sstr;
 
-  sstr << dir << " " << pos << " " << speed << " " << id;
+  sstr << dir << " " << pos << " " << speed << " " << id << " " << size;
 
   return sstr.str();
 }
@@ -74,6 +75,7 @@ car& car::operator=(const car& c)
   this->speed = c.speed;
   this->pos = c.pos;
   this->dir = c.dir;
+  this->size = c.size;
 
   return *this;
 }

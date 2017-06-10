@@ -38,7 +38,7 @@ class car
   
     // Constructors
     car(const car& c);
-    car(int pos, int speed, direction dir);
+    car(int pos, int speed, direction dir, int size=1);
     car(const std::string& str);
 
     direction dir; // Car direction

@@ -33,17 +33,20 @@ class predictor
     const int max_h = 1e2;
     const int max_v = 1e2;
 
+    std::map<int, float> t0s, tfs;
+
   protected:
     void intersects(float &t0, float &tf, const car& c);
 
   public:
-    std::map<int, car> cars;
+    std::map<int, car> cars_h, cars_v;
 
     predictor(int cross_h0, int cross_hf, int cross_v0, int cross_vf);
 
     void add_car(const car& c);
+    void remove_car(const car& c);
 
-    car::action update(const car& c);
+    car::action update(car& c);
 
     bool exists(const car& c) const;
 
