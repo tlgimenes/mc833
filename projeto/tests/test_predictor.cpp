@@ -129,6 +129,20 @@ void test4()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void test5()
+{
+  log::write(INFO, "Starting test5 - Test car to/from string ... ");
+
+  car c1 = car(20, 2, car::HORIZONTAL);
+  car c2(c1.to_string());
+
+  test(c1 == c2);
+  
+  log::write(INFO, "pass");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 int main(int argc, char** argv) 
 {
   log::log_level = DEBUG;
@@ -138,8 +152,8 @@ int main(int argc, char** argv)
   test1();
   test2();
   test3();
-
   test4();
+  test5();
 
   return EXIT_SUCCESS;
 }

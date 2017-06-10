@@ -177,7 +177,8 @@ void predictor::draw()
     assert(car.second.pos < max_v);
     map2D[car.second.pos*scale_v][cross_h0*scale_h+1] = '#';
   }
-
+ 
+  //std::cout << "\x1B[2J\x1B[H";
   for(auto& line: map2D) {
     for(auto& elem: line) {
       std::cout << elem;

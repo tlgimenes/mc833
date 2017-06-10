@@ -50,6 +50,7 @@ class car
     std::string to_string(); // Class to string
     
     car& operator=(const car& c);
+    bool operator==(const car& c);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
