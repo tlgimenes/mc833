@@ -24,6 +24,9 @@
 
 #define MAX_PENDING 5
 #define MAX_LINE 256
+#define SECURITY_PORT 12345
+#define ENTERTAINMENT_PORT 12346
+#define COMFORT_PORT 12347
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -36,8 +39,8 @@ class server
     // Constructor
     server(int port, application type, int delay);
 
-    virtual car get_car_info() =0; // Get action from client
-    virtual void send_action(car::action act) =0; // Send action to client
+    virtual car get_car_info(); // Get action from client
+    virtual void send_action(car::action act); // Send action to client
 
   protected:
     const int port;         // Server port

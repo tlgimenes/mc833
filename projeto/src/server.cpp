@@ -16,6 +16,16 @@ server::server(int port, application type, int delay) :
 {
 }
 
+car server::get_car_info()
+{
+  car new_car = car(0, 1, car::direction::HORIZONTAL, 1);
+  return new_car;
+}
+
+void server::send_action(car::action act)
+{
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 tcp_server::tcp_server(int port, application type, int delay) :
