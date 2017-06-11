@@ -1,7 +1,7 @@
 CC=g++
 #CXXFLAGS=-O3 -DNDEBUG -Wall
 CXXFLAGS=-O0 -Wall -g 
-DEP=car.o client.o client_car.o predictor.o
+DEP=car.o client.o client_car.o predictor.o utils.o
 BIN=test_predictor
 
 all: $(DEP)
