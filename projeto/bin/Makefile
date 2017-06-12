@@ -1,7 +1,7 @@
 CC=g++
 #CXXFLAGS=-O3 -DNDEBUG -Wall
 CXXFLAGS=-O0 -Wall -g 
-DEP=car.o server.o utils.o predictor.o
+DEP=car.o server.o tcp_server.o udp_server.o utils.o predictor.o
 BIN=server_main
 
 all: $(DEP)
