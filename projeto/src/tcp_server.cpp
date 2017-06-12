@@ -16,13 +16,13 @@ tcp_server::tcp_server(int port, application type, int delay) :
   server(port, type, delay, server::protocol::TCP)
 {
   // Creates socket and get a file descriptor of the socket
-  socket_fd = tcp_socket();
+  tcp_socket();
 
   // Binds the socket to the descriptor
-  tcp_bind(socket_fd);
+  tcp_bind();
 
   // Listens the socket for accepting connections
-  tcp_listen(socket_fd);
+  tcp_listen();
 
   // Initializes variables
   n_clients = -1;
@@ -110,7 +110,7 @@ bool tcp_server::check_clients()
   // Checks if new client is trying to connect
   if (FD_ISSET(socket_fd, &new_set)) {
     // Accepts new connection
-    int i, fd = tcp_accept(socket_fd);
+    int i, fd = tcp_accept();
 
     // Saves file descriptor on vector
     for (i = 0; i < FD_SETSIZE; i++) {
@@ -156,27 +156,25 @@ void tcp_server::send_action(car::action ac)
   }
 }
 
-int tcp_server::tcp_socket()
+void tcp_server::tcp_socket()
 {
   // Creates socket
-  int fd = socket(AF_INET, SOCK_STREAM, 0);
+  socket_fd = socket(AF_INET, SOCK_STREAM, 0);
   
   // Sets option to reuse socket 
   int optval = 1;
-  int opt = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+  int opt = setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
 
   // Checks success or failure
-  if (fd >= 0 && opt >= 0) {
-    log::write(DEBUG, "Socket " + std::to_string(fd) + " created successfully");
+  if (socket_fd >= 0 && opt >= 0) {
+    log::write(DEBUG, "Socket " + std::to_string(socket_fd) + " created successfully");
   }
   else {
     log::write(FAIL, std::strerror(errno));
   }
-
-  return fd;
 }
 
-void tcp_server::tcp_bind(int socket)
+void tcp_server::tcp_bind()
 {
   struct sockaddr_in address;
 
@@ -187,33 +185,33 @@ void tcp_server::tcp_bind(int socket)
   address.sin_addr.s_addr = INADDR_ANY;
   address.sin_port = htons(port);
 
-  int ret = bind(socket, (struct sockaddr*)&address, sizeof(address));
+  int ret = bind(socket_fd, (struct sockaddr*)&address, sizeof(address));
 
   // Checks success or failure
   if (ret >= 0) {
-    log::write(DEBUG, "Socket " + std::to_string(socket) + " binded to port " + std::to_string(port) + " successfully");
+    log::write(DEBUG, "Socket " + std::to_string(socket_fd) + " binded to port " + std::to_string(port) + " successfully");
   }
   else {
     log::write(FAIL, std::strerror(errno));
   }
 }
 
-void tcp_server::tcp_listen(int socket)
+void tcp_server::tcp_listen()
 {
-  int ret = listen(socket, MAX_PENDING);
+  int ret = listen(socket_fd, MAX_PENDING);
 
   // Checks success or failure
   if (ret >= 0) {
-    log::write(DEBUG, "Socket " + std::to_string(socket) + " is listenning for new connections");
+    log::write(DEBUG, "Socket " + std::to_string(socket_fd) + " is listenning for new connections");
   }
   else {
     log::write(FAIL, std::strerror(errno));
   }
 }
 
-int tcp_server::tcp_accept(int socket)
+int tcp_server::tcp_accept()
 {
-  int fd = accept(socket, (struct sockaddr*)&cli_addr, &cli_len);
+  int fd = accept(socket_fd, (struct sockaddr*)&cli_addr, &cli_len);
 
   // Checks success or failure
   if (fd >= 0) {

@@ -77,10 +77,10 @@ class tcp_server: public server
     fd_set new_set;
     fd_set all_fds;
 
-    int tcp_socket();
-    void tcp_bind(int socket);
-    void tcp_listen(int socket);
-    int tcp_accept(int socket);
+    void tcp_socket();
+    void tcp_bind();
+    void tcp_listen();
+    int tcp_accept();
     bool check_clients();
 };
 
@@ -96,8 +96,8 @@ class udp_server: public server
     void send_action(car::action ac); // Send action to client
 
   private:
-    int udp_socket();
-    void udp_bind(int socket);
+    void udp_socket();
+    void udp_bind();
 };
 
 ////////////////////////////////////////////////////////////////////////////////

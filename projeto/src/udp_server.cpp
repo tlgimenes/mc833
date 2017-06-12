@@ -16,10 +16,10 @@ udp_server::udp_server(int port, application type, int delay) :
   server(port, type, delay, server::protocol::UDP)
 {
   // Creates socket and get a file descriptor of the socket
-  socket_fd = udp_socket();
+  udp_socket();
 
   // Binds the socket to the descriptor
-  udp_bind(socket_fd);
+  udp_bind();
 }
 
 car udp_server::get_car_info()
@@ -61,27 +61,25 @@ void udp_server::send_action(car::action ac)
   }
 }
 
-int udp_server::udp_socket()
+void udp_server::udp_socket()
 {
   // Creates socket
-  int fd = socket(AF_INET, SOCK_DGRAM, 0);
+  socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
   
   // Sets option to reuse socket 
   int optval = 1;
-  int opt = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+  int opt = setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
 
   // Checks success or failure
-  if (fd >= 0 && opt >= 0) {
-    log::write(DEBUG, "UDP socket " + std::to_string(fd) + " created successfully");
+  if (socket_fd >= 0 && opt >= 0) {
+    log::write(DEBUG, "UDP socket " + std::to_string(socket_fd) + " created successfully");
   }
   else {
     log::write(FAIL, std::strerror(errno));
   }
-
-  return fd;
 }
 
-void udp_server::udp_bind(int socket)
+void udp_server::udp_bind()
 {
   struct sockaddr_in address;
 
@@ -92,11 +90,11 @@ void udp_server::udp_bind(int socket)
   address.sin_addr.s_addr = INADDR_ANY;
   address.sin_port = htons(port);
 
-  int ret = bind(socket, (struct sockaddr*) &address, sizeof(address));
+  int ret = bind(socket_fd, (struct sockaddr*) &address, sizeof(address));
 
   // Checks success or failure
   if (ret >= 0) {
-    log::write(DEBUG, "Socket " + std::to_string(socket) + " binded to port " + std::to_string(port) + " successfully");
+    log::write(DEBUG, "Socket " + std::to_string(socket_fd) + " binded to port " + std::to_string(port) + " successfully");
   }
   else {
     log::write(FAIL, std::strerror(errno));
