@@ -35,6 +35,10 @@ class car
     static const int invalid_id;
     // Number of instances of this class
     static int ncars;
+
+    // Convert between string and action
+    static std::string action_to_string(action ac);
+    static action string_to_action(std::string str);
   
     // Constructors
     car(const car& c);
@@ -48,7 +52,7 @@ class car
     int id;        // Car unique id
 
     std::string to_string(); // Class to string
-    
+
     car& operator=(const car& c);
     bool operator==(const car& c);
 };

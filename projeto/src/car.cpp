@@ -14,6 +14,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "car.hpp"
+#include "utils.hpp"
 
 #include <sstream>
 #include <cstdlib>
@@ -24,6 +25,38 @@
 const int car::invalid_id = -1;
 
 int car::ncars = 0;
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::string car::action_to_string(car::action ac)
+{
+  switch (ac) {
+    case car::action::ACCEL: return "accel";
+    case car::action::AMBULANCE: return "ambulance";
+    case car::action::BREAK: return "break";
+    case car::action::KEEP: default: return "keep";
+  }
+}
+
+car::action car::string_to_action(std::string str)
+{
+  if ("accel") {
+    return car::action::ACCEL;
+  }
+  else if ("ambulance") {
+    return car::action::AMBULANCE;
+  }
+  else if ("break") {
+    return car::action::BREAK;
+  }
+  else if ("keep") {
+    return car::action::KEEP;
+  }
+  else {
+    log::write(WARNING, "Invalid action '" + str + "' so 'keep' will be returned");
+    return car::action::KEEP;
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -40,7 +73,7 @@ car::car(int pos, int speed, car::direction dir, int size):
 ////////////////////////////////////////////////////////////////////////////////
 
 car::car(const car& c) :
-  pos(c.pos), speed(c.speed), id(c.id), dir(c.dir), size(c.size)
+  dir(c.dir), pos(c.pos), speed(c.speed), size(c.size), id(c.id)
 {
 }
 
