@@ -24,9 +24,11 @@
 class client_car: public car
 {
   public:
-    // Acho que nao precisa desta funcao. É só ler o novo valor da velocidade calculada pelo predictor, nao precisa fazer nada aqui. O construtor a partir da string ja faz isso
-    void server_update(enum action);
+    // Constructor
+    client_car(int pos, int speed, direction dir, int size=1);
 
+    // Acho que nao precisa desta funcao. É só ler o novo valor da velocidade calculada pelo predictor, nao precisa fazer nada aqui. O construtor a partir da string ja faz isso
+    void server_update(action ac);
     void self_update();
 };
 

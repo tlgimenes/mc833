@@ -13,10 +13,40 @@
  */
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <cstdlib>
+#include <iostream>
+#include <cstring>
+#include <unistd.h>
+#include <netdb.h>
+#include <cassert>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 #include "client.hpp"
+#include "car.hpp"
 
 ////////////////////////////////////////////////////////////////////////////////
 
+client::client(int port, const std::string& ip) :
+  port(port), ip(ip)
+{ 
+}
 
+void client::send_car_info(car c)
+{
+  is_waiting = true;
+}
+
+car::action client::get_action()
+{
+  is_waiting = false;
+  return car::action::KEEP;
+}
+
+void client::close_socket()
+{
+  // Closes socket
+  close(socket_fd);
+}
 
 ////////////////////////////////////////////////////////////////////////////////

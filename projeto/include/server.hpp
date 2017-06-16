@@ -41,9 +41,9 @@ class server
     // Constructor
     server(int port, application type, int delay, protocol prot);
 
-    virtual car get_car_info(); // Get action from client
+    virtual car get_car_info();               // Get car info from client
     virtual void send_action(car::action ac); // Send action to client
-    void close_socket(); // Close server socket
+    void close_socket();                      // Close server socket
 
   protected:
     const int port;               // Server port
@@ -65,7 +65,7 @@ class tcp_server: public server
     // Constructor
     tcp_server(int port, application type, int delay);
 
-    car get_car_info(); // Get action from client
+    car get_car_info();               // Get car info from client
     void send_action(car::action ac); // Send action to client
 
   private:
@@ -92,7 +92,7 @@ class udp_server: public server
     // Constructor
     udp_server(int port, application type, int delay);
 
-    car get_car_info(); // Get action from client
+    car get_car_info();               // Get car info from client
     void send_action(car::action ac); // Send action to client
 
   private:

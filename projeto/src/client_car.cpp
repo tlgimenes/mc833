@@ -19,6 +19,16 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+client_car::client_car(int pos, int speed, direction dir, int size) :
+  car(pos, speed, dir, size)
+{ 
+}
+
+void client_car::server_update(action ac)
+{
+
+}
+
 void client_car::self_update()
 {
   this->speed += rand() % (2*car::accel+1) - car::accel;
