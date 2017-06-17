@@ -8,14 +8,14 @@ CBIN=client_main
 
 all: $(SBIN) $(CBIN)
 
-$(SBIN): $(SDEP)
+$(SBIN): ../src/$(SBIN).cpp $(SDEP)
 	$(CC) $(CXXFLAGS) -I../include $(SDEP) ../src/$(SBIN).cpp -o $(SBIN)
 
-$(CBIN): $(CDEP)
+$(CBIN): ../src/$(CBIN).cpp $(CDEP)
 	$(CC) $(CXXFLAGS) -I../include $(CDEP) ../src/$(CBIN).cpp -o $(CBIN)
 
 %.o: ../src/%.cpp
 	$(CC) -c $(CXXFLAGS) -I../include $< -o $@
 
 clear:
-	rm $(BIN) $(DEP)
+	rm $(SBIN) $(SDEP) $(CBIN) $(CDEP) -f

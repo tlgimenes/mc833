@@ -61,7 +61,6 @@ class tcp_client: public client
     car::action get_action();   // Get action from server
 
   private:
-
     void tcp_socket();
     void tcp_connect();
 };

@@ -47,6 +47,8 @@ void udp_client::send_car_info(car c)
     if (n <= 0) {
       log::write(FAIL, strerror(errno));
     }
+    is_waiting = true;
+    log::write(DEBUG, "Sent car to server: " + car_str);
 }
 
 car::action udp_client::get_action()
@@ -58,10 +60,12 @@ car::action udp_client::get_action()
   if (n <= 0) {
     log::write(FAIL, "Fail to receive from server");
   }
+  is_waiting = false;
 
   // Gets action from string
   std::string ac_str(buf);
   car::action ac = car::string_to_action(ac_str);
+  log::write(DEBUG, "Received action from server: " + ac_str);
 
   return ac;
 }

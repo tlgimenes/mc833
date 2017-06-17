@@ -30,6 +30,7 @@ car udp_server::get_car_info()
     bzero(buf, str_len);
 
     // Receives data from client at a max of MAX_LINE bytes and sets buffer buf
+    cli_len = sizeof(cli_addr);
     ssize_t n = recvfrom(socket_fd, buf, str_len, 0, (struct sockaddr*)&cli_addr, &cli_len);
 
     // If didn't receive anything or something bad happened to the client
@@ -38,6 +39,7 @@ car udp_server::get_car_info()
     // Creates car from string
     std::string car_str(buf);
     car new_car = car(car_str);
+    log::write(DEBUG, "Received car from client: " + car_str);
 
     // Returns client car
     return new_car;
@@ -55,6 +57,7 @@ void udp_server::send_action(car::action ac)
   // Checks success or failure
   if (n >= 0) {
     log::write(DEBUG, "Wrote " + std::to_string(n) + " bytes to client");
+    log::write(DEBUG, "Sent action to client: " + ac_str);
   }
   else {
     log::write(FAIL, std::strerror(errno));

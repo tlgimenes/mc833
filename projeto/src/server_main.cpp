@@ -12,6 +12,13 @@
 
 int main(int argc, char** argv)
 {
+  // Sets verbose level. If compiled in debug mode, show all messages, else show only FAIL errors 
+#ifdef NDEBUG
+  log::level() = DEBUG;
+#else
+  log::level() = FAIL;
+#endif
+
   // Checks given arguments
   if (argc != 4) {
     log::write(FAIL, "Usage: server_main type protocol delay");
@@ -27,8 +34,8 @@ int main(int argc, char** argv)
   }
 
   // Gets correct port and protocol type
-  int port;
-  server::application type;
+  int port = SECURITY_PORT;
+  server::application type = server::application::SECURITY;
   if (type_str == "security") {
     port = SECURITY_PORT;
     type = server::application::SECURITY;

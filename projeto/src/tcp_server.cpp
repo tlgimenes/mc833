@@ -40,9 +40,14 @@ tcp_server::tcp_server(int port, application type, int delay) :
 car tcp_server::get_car_info()
 {
   while (true) {
-    // Wait until some client is ready
-    if (cli_index > n_clients && !check_clients()) {
+    // Waits until some client is ready
+    if (!check_clients()) {
       continue;
+    }
+
+    // Resets client array index counter
+    if (cli_index > n_clients) {
+      cli_index = 0;
     }
 
     // Verifies which clients have data to be read and process it
@@ -79,6 +84,7 @@ car tcp_server::get_car_info()
           // Creates car from string
           std::string car_str(buf);
           car new_car = car(car_str);
+          log::write(DEBUG, "Received car from client: " + car_str);
 
           // Returns client car
           return new_car;
@@ -150,6 +156,7 @@ void tcp_server::send_action(car::action ac)
   // Checks success or failure
   if (n >= 0) {
     log::write(DEBUG, "Wrote " + std::to_string(n) + " bytes to client");
+    log::write(DEBUG, "Sent action to client: " + ac_str);
   }
   else {
     log::write(FAIL, std::strerror(errno));

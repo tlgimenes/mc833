@@ -17,7 +17,7 @@ void create_client(std::vector<std::unique_ptr<client>> &clients, int port, std:
     log::write(DEBUG, "Starting " + type_str + " as TCP client");
   }
   else if (protocol_str == "udp") {
-    clients.emplace_back(new tcp_client(port, hostname));
+    clients.emplace_back(new udp_client(port, hostname));
     log::write(DEBUG, "Starting " + type_str + " as UDP client");
   }
   else if (protocol_str == "none") {
@@ -32,6 +32,13 @@ void create_client(std::vector<std::unique_ptr<client>> &clients, int port, std:
 
 int main(int argc, char** argv)
 {
+  // Sets verbose level. If compiled in debug mode, show all messages, else show only FAIL errors 
+#ifdef NDEBUG
+  log::level() = DEBUG;
+#else
+  log::level() = FAIL;
+#endif
+
   // Checks given arguments
   if (argc != 5) {
     log::write(FAIL, "Usage: client_main hostname security_protocol entertainment_protocol comfort_protocol");

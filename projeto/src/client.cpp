@@ -24,12 +24,14 @@
 #include <arpa/inet.h>
 #include "client.hpp"
 #include "car.hpp"
+#include "utils.hpp"
 
 ////////////////////////////////////////////////////////////////////////////////
 
 client::client(int port, const std::string& ip) :
   port(port), ip(ip)
-{ 
+{
+  is_waiting = false;
 }
 
 void client::send_car_info(car c)

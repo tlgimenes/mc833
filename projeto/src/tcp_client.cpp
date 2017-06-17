@@ -44,6 +44,8 @@ void tcp_client::send_car_info(car c)
     if (n <= 0) {
       log::write(FAIL, "Fail to write to server");
     }
+    is_waiting = true;
+    log::write(DEBUG, "Sent car to server: " + car_str);
 }
 
 car::action tcp_client::get_action()
@@ -55,10 +57,12 @@ car::action tcp_client::get_action()
   if (n <= 0) {
     log::write(FAIL, "Fail to read from server");
   }
+  is_waiting = false;
 
   // Gets action from string
   std::string ac_str(buf);
   car::action ac = car::string_to_action(ac_str);
+  log::write(DEBUG, "Received action from server: " + ac_str);
 
   return ac;
 }
