@@ -86,6 +86,11 @@ int main(int argc, char** argv)
       pred.add_car(c);
     }
 
+    // Draws prediction if not on debug mode and is security server
+    if (log::level() != DEBUG && type == server::application::SECURITY) {
+      pred.draw();
+    }
+
     // Updates predictor and gets action
     car::action ac = pred.update(c);
 

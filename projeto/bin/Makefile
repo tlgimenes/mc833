@@ -8,10 +8,10 @@ CBIN=client_main
 
 all: $(SBIN) $(CBIN)
 
-$(SBIN): ../src/$(SBIN).cpp $(SDEP)
+$(SBIN): ../src/$(SBIN).cpp $(SDEP) Makefile
 	$(CC) $(CXXFLAGS) -I../include $(SDEP) ../src/$(SBIN).cpp -o $(SBIN)
 
-$(CBIN): ../src/$(CBIN).cpp $(CDEP)
+$(CBIN): ../src/$(CBIN).cpp $(CDEP) Makefile
 	$(CC) $(CXXFLAGS) -I../include $(CDEP) ../src/$(CBIN).cpp -o $(CBIN)
 
 %.o: ../src/%.cpp
