@@ -62,13 +62,17 @@ int main(int argc, char** argv)
 
   while (true) {
     for (auto const &cli : clients) {
+      // Sends own information to server
       if (!cli->is_waiting_response()) {
         cli->send_car_info(cc);
       }
+      // Waits for action from server
       else if (cli->has_finished_delay()) {
         car::action ac = cli->get_action();
         cc.server_update(ac);
       }
+      // Self updates position
+      cc.self_update();
     }
   }
 

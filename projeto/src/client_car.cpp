@@ -14,6 +14,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "client_car.hpp"
+#include "utils.hpp"
 
 #include <cstdlib>
 
@@ -21,18 +22,39 @@
 
 client_car::client_car(int pos, int speed, direction dir, int size) :
   car(pos, speed, dir, size)
-{ 
+{
+  last_update = std::chrono::high_resolution_clock::now();
 }
 
 void client_car::server_update(action ac)
 {
-
+  switch (ac) {
+    case car::action::ACCEL: speed += accel; break;
+    case car::action::BREAK: speed -= accel; break;
+    case car::action::AMBULANCE: exit(EXIT_SUCCESS);
+    case car::action::KEEP: default: break;
+  }
 }
 
 void client_car::self_update()
 {
-  this->speed += rand() % (2*car::accel+1) - car::accel;
-  this->speed = std::max(0, speed);
+  // Calculates delta update time
+  std::chrono::high_resolution_clock::time_point now = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> delta_update = now - last_update;
+  last_update = now;
+
+  // Randomizes speed
+  // speed += rand() % (2*car::accel+1) - car::accel;
+  speed = std::max(0, speed);
+  speed = std::min(MAX_SPEED, speed);
+
+  // Calculates delta position
+  delta_pos += speed * delta_update.count();
+  if (delta_pos > 1) {
+    int int_delta_pos = (int)delta_pos;
+    delta_pos -= int_delta_pos;
+    pos += int_delta_pos;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

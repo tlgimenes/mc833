@@ -17,6 +17,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <chrono>
+#include <ratio>  
 #include "car.hpp"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -27,9 +29,12 @@ class client_car: public car
     // Constructor
     client_car(int pos, int speed, direction dir, int size=1);
 
-    // Acho que nao precisa desta funcao. É só ler o novo valor da velocidade calculada pelo predictor, nao precisa fazer nada aqui. O construtor a partir da string ja faz isso
-    void server_update(action ac);
-    void self_update();
+    void server_update(action ac);  // Update based on action
+    void self_update();             // Update own position
+
+  private:
+    double delta_pos = 0;  // Decimal part of position
+    std::chrono::high_resolution_clock::time_point last_update; // When was the last update
 };
 
 ////////////////////////////////////////////////////////////////////////////////
