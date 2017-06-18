@@ -44,7 +44,10 @@ void tcp_client::send_car_info(car c)
     if (n <= 0) {
       log::write(FAIL, "Fail to write to server");
     }
+
+    // Starts counting delay
     start_delay();
+
     log::write(DEBUG, "Sent car to server: " + car_str);
 }
 
@@ -57,6 +60,8 @@ car::action tcp_client::get_action()
   if (n <= 0) {
     log::write(FAIL, "Fail to read from server");
   }
+
+  // Stops delay counting
   stop_delay();
 
   // Gets action from string

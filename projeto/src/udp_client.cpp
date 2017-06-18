@@ -47,7 +47,10 @@ void udp_client::send_car_info(car c)
     if (n <= 0) {
       log::write(FAIL, strerror(errno));
     }
+
+    // Starts counting delay
     start_delay();
+
     log::write(DEBUG, "Sent car to server: " + car_str);
 }
 
@@ -60,6 +63,8 @@ car::action udp_client::get_action()
   if (n <= 0) {
     log::write(FAIL, "Fail to receive from server");
   }
+
+  // Stops delay counting
   stop_delay();
 
   // Gets action from string

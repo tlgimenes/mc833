@@ -65,11 +65,11 @@ car tcp_server::get_car_info()
         int n = read(client_fd, buf, MAX_LINE);
 
         // Checks success or failure
-        if (n >= 0) {
+        if (n > 0) {
           log::write(DEBUG, "Received " + std::to_string(n) + " bytes");
         }
         // Closes connection if client has disconnected
-        else if (errno == ECONNRESET) {
+        else if (n == 0 || errno == ECONNRESET) {
           close(client_fd);
           FD_CLR(client_fd, &all_fds);
           clients[cli_index] = -1;
