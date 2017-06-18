@@ -28,8 +28,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-client::client(int port, const std::string& ip) :
-  port(port), ip(ip)
+client::client(int port, const std::string& ip, int delay) :
+  port(port), ip(ip), delay(delay)
 {
   is_waiting = false;
 }
@@ -49,6 +49,34 @@ void client::close_socket()
 {
   // Closes socket
   close(socket_fd);
+}
+
+bool client::is_waiting_response()
+{
+  return is_waiting;
+}
+
+void client::start_delay()
+{
+  delay_start = std::chrono::high_resolution_clock::now();
+  is_waiting = true;
+}
+
+void client::stop_delay()
+{
+  is_waiting = false;
+}
+
+int client::get_response_delay()
+{
+  std::chrono::high_resolution_clock::time_point now = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double, std::milli> time_span = now - delay_start;
+  return time_span.count();
+}
+
+bool client::has_finished_delay()
+{
+  return (get_response_delay() > delay);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

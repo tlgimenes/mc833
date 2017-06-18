@@ -13,8 +13,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-tcp_client::tcp_client(int port, const std::string& ip) :
-  client(port, ip)
+tcp_client::tcp_client(int port, const std::string& ip, int delay) :
+  client(port, ip, delay)
 {
   host = gethostbyname(ip.c_str());
 
@@ -44,7 +44,7 @@ void tcp_client::send_car_info(car c)
     if (n <= 0) {
       log::write(FAIL, "Fail to write to server");
     }
-    is_waiting = true;
+    start_delay();
     log::write(DEBUG, "Sent car to server: " + car_str);
 }
 
@@ -57,12 +57,13 @@ car::action tcp_client::get_action()
   if (n <= 0) {
     log::write(FAIL, "Fail to read from server");
   }
-  is_waiting = false;
+  stop_delay();
 
   // Gets action from string
   std::string ac_str(buf);
   car::action ac = car::string_to_action(ac_str);
-  log::write(DEBUG, "Received action from server: " + ac_str);
+  std::string delay_str = std::to_string(get_response_delay());
+  log::write(DEBUG, "Received action from server in " + delay_str + "ms: " + ac_str);
 
   return ac;
 }
