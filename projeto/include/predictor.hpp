@@ -32,6 +32,7 @@ class predictor
 
     const int max_h = 1e2;
     const int max_v = 1e2;
+    const bool always_keep = false; // Should ignore prediction?
 
     std::map<int, float> t0s, tfs;
 
@@ -40,7 +41,6 @@ class predictor
 
   public:
     std::map<int, car> cars_h, cars_v;
-    bool always_keep = false; // Should ignore prediction?
 
     predictor(int cross_h0, int cross_hf, int cross_v0, int cross_vf, bool always_keep = false);
 

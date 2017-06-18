@@ -57,8 +57,14 @@ int main(int argc, char** argv)
   create_client(clients, ENTERTAINMENT_PORT, hostname, entertainment_delay, entertainment_protocol, "entertainment");
   create_client(clients, COMFORT_PORT, hostname, comfort_delay, comfort_protocol, "comfort");
 
+  // Randomizes car initial values
+  int pos = random::range(0, 10);
+  int speed = random::range(1, 3);
+  car::direction dir = random::is_true() ? car::HORIZONTAL : car::VERTICAL;
+  int size = 1;
+
   // Creates client car
-  client_car cc(20, 2, car::HORIZONTAL);
+  client_car cc(pos, speed, dir, size);
 
   while (true) {
     for (auto const &cli : clients) {

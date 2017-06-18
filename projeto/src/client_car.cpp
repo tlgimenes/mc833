@@ -44,7 +44,7 @@ void client_car::self_update()
   last_update = now;
 
   // Randomizes speed
-  // speed += rand() % (2*car::accel+1) - car::accel;
+  speed += random::range(-accel, accel);
   speed = std::max(0, speed);
   speed = std::min(MAX_SPEED, speed);
 
