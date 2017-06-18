@@ -40,8 +40,9 @@ class predictor
 
   public:
     std::map<int, car> cars_h, cars_v;
+    bool always_keep = false; // Should ignore prediction?
 
-    predictor(int cross_h0, int cross_hf, int cross_v0, int cross_vf);
+    predictor(int cross_h0, int cross_hf, int cross_v0, int cross_vf, bool always_keep = false);
 
     void add_car(const car& c);
     void remove_car(const car& c);

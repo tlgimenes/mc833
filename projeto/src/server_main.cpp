@@ -36,6 +36,7 @@ int main(int argc, char** argv)
   // Gets correct port and protocol type
   int port = SECURITY_PORT;
   server::application type = server::application::SECURITY;
+  bool ignore_prediction = false;
   if (type_str == "security") {
     port = SECURITY_PORT;
     type = server::application::SECURITY;
@@ -43,10 +44,12 @@ int main(int argc, char** argv)
   else if (type_str == "entertainment") {
     port = ENTERTAINMENT_PORT;
     type = server::application::ENTERTAINMENT;
+    ignore_prediction = true;
   }
   else if (type_str == "comfort") {
     port = COMFORT_PORT;
     type = server::application::COMFORT;
+    ignore_prediction = true;
   }
   else {
     log::write(FAIL, "Invalid type: use 'security', 'entertainment' or 'comfort'");
@@ -71,7 +74,7 @@ int main(int argc, char** argv)
   }
 
   // Initializes predictor
-  predictor pred(50, 60, 60, 74);
+  predictor pred(50, 60, 60, 74, ignore_prediction);
 
   // Main server loop
   while (true) {

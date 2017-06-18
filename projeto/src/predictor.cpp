@@ -26,8 +26,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-predictor::predictor(int cross_h0, int cross_hf, int cross_v0, int cross_vf) : 
-  cross_h0(cross_h0), cross_hf(cross_hf), cross_v0(cross_v0), cross_vf(cross_vf)
+predictor::predictor(int cross_h0, int cross_hf, int cross_v0, int cross_vf, bool always_keep) : 
+  cross_h0(cross_h0), cross_hf(cross_hf), cross_v0(cross_v0), cross_vf(cross_vf), always_keep(always_keep)
 {
   assert(cross_h0 < cross_hf && cross_v0 < cross_vf);
   assert(cross_hf < max_h && cross_vf < max_v);
@@ -82,6 +82,11 @@ inline bool are_intervals_disjoint(float I00, float I0f, float I10, float I1f)
 
 car::action predictor::update(car& c) 
 {
+  // Check if should always send keep action
+  if (always_keep) {
+    return car::KEEP;
+  }
+
   std::vector<float> t0(car::accel*2+1), tf(car::accel*2+1);
   std::vector<float> t0_col, tf_col;
   int speed0 = c.speed;
