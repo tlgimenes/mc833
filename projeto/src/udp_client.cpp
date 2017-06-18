@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cstring>
 #include <unistd.h>
+#include <fcntl.h>
 #include <netdb.h>
 #include <cassert>
 #include <sys/types.h>
@@ -60,7 +61,16 @@ car::action udp_client::get_action()
   int n = recvfrom(socket_fd, buf, MAX_LINE, 0, NULL, NULL);
 
   // Checks success or failure
-  if (n <= 0) {
+  if (n < 0) {
+    // No data to read yet
+    if (errno == EAGAIN || errno == EWOULDBLOCK) {
+      log::write(DEBUG, "No action from server yet");
+    }
+    else {
+      log::write(FAIL, std::strerror(errno));
+    }
+  }
+  else if (n == 0) {
     log::write(FAIL, "Fail to receive from server");
   }
 
@@ -79,6 +89,9 @@ car::action udp_client::get_action()
 void udp_client::udp_socket()
 {
   socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
+
+  // Sets socket as non-blocking
+  fcntl(socket_fd, F_SETFL, O_NONBLOCK);
 
   // Sets option to reuse socket
   int optval = 1;

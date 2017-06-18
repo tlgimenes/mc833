@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cstring>
 #include <unistd.h>
+#include <fcntl.h>
 #include <netdb.h>
 #include <cassert>
 #include <sys/types.h>
@@ -57,8 +58,17 @@ car::action tcp_client::get_action()
   int n = read(socket_fd, buf, MAX_LINE);
 
   // Checks success or failure
-  if (n <= 0) {
-    log::write(FAIL, "Fail to read from server");
+  if (n < 0) {
+    // No data to read yet
+    if (errno == EAGAIN || errno == EWOULDBLOCK) {
+      log::write(DEBUG, "No action from server yet");
+    }
+    else {
+      log::write(FAIL, std::strerror(errno));
+    }
+  }
+  else if (n == 0) {
+    log::write(FAIL, "Fail to receive from server");
   }
 
   // Stops delay counting
@@ -76,6 +86,9 @@ car::action tcp_client::get_action()
 void tcp_client::tcp_socket()
 {
   socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+
+  // Sets socket as non-blocking
+  fcntl(socket_fd, F_SETFL, O_NONBLOCK);
 
   // Sets option to reuse socket
   int optval = 1;
@@ -100,6 +113,15 @@ void tcp_client::tcp_connect()
 
   // Connects to server
   int ret = connect(socket_fd, (struct sockaddr*)&srv_addr, sizeof(srv_addr));
+
+  // Check if it's connecting
+  if (ret < 0 && errno == EINPROGRESS) {
+    log::write(DEBUG, "Waiting to connect to TCP server");
+    fd_set fds;
+    FD_ZERO(&fds);
+    FD_SET(socket_fd, &fds);
+    ret = select(socket_fd + 1, NULL, &fds, NULL, NULL);
+  }
 
   // Checks success or failure
   if (ret >= 0) {
