@@ -25,7 +25,7 @@ tcp_server::tcp_server(int port, application type, int delay) :
   tcp_listen();
 
   // Initializes variables
-  n_clients = -1;
+  n_clients = 0;
   for (int i = 0; i < FD_SETSIZE; i++) {
     clients[i] = -1;
   }
@@ -40,20 +40,20 @@ tcp_server::tcp_server(int port, application type, int delay) :
 car tcp_server::get_car_info()
 {
   while (true) {
-    // Waits until some client is ready
-    if (!check_clients()) {
-      continue;
-    }
-
     // Resets client array index counter
-    if (cli_index > n_clients) {
-      cli_index = 0;
+    if (cli_index >= n_clients) {
+      if (!check_clients()) {
+        continue;
+      }
+      else {
+        cli_index = 0;
+      }
     }
 
     // Verifies which clients have data to be read and process it
-    for (int i = cli_index; i <= n_clients; i++) {
+    for (; cli_index < n_clients; cli_index++) {
       // Gets valid client file descriptor
-      client_fd = clients[i];
+      client_fd = clients[cli_index];
       if (client_fd < 0) continue;
 
       // Checks if client has data
@@ -68,27 +68,26 @@ car tcp_server::get_car_info()
         if (n >= 0) {
           log::write(DEBUG, "Received " + std::to_string(n) + " bytes");
         }
+        // Closes connection if client has disconnected
+        else if (errno == ECONNRESET) {
+          close(client_fd);
+          FD_CLR(client_fd, &all_fds);
+          clients[cli_index] = -1;
+          log::write(DEBUG, "Socket " + std::to_string(client_fd) + " has been disconnected");
+          continue;
+        }
         else {
           log::write(FAIL, std::strerror(errno));
         }
 
-        // Closes connection if client has disconnected
-        if (n == 0) {
-          close(client_fd);
-          FD_CLR(client_fd, &all_fds);
-          clients[i] = -1;
-          log::write(DEBUG, "Socket " + std::to_string(client_fd) + " has been disconnected");
-        }
-        // Or process string otherwise
-        else {
-          // Creates car from string
-          std::string car_str(buf);
-          car new_car = car(car_str);
-          log::write(DEBUG, "Received car from client: " + car_str);
+        // Creates car from string
+        std::string car_str(buf);
+        car new_car = car(car_str);
+        log::write(DEBUG, "Received car from client: " + car_str);
 
-          // Returns client car
-          return new_car;
-        }
+        // Returns client car
+        cli_index++;
+        return new_car;
 
         // There aren't and file descriptors to be read
         if (--nready <= 0) break;
@@ -136,8 +135,8 @@ bool tcp_server::check_clients()
 
     if (fd > max_fd)
       max_fd = fd; // Updates max file descriptor
-    if (i > n_clients)
-      n_clients = i; // Updates max index on vector
+    if (i + 1 > n_clients)
+      n_clients = i + 1; // Updates max index on vector
     if (--nready <= 0)
       return false; // There aren't and file descriptors to be read
   }
@@ -218,6 +217,7 @@ void tcp_server::tcp_listen()
 
 int tcp_server::tcp_accept()
 {
+  cli_len = sizeof(cli_addr);
   int fd = accept(socket_fd, (struct sockaddr*)&cli_addr, &cli_len);
 
   // Checks success or failure
