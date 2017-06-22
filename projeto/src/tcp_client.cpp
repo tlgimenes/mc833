@@ -59,9 +59,10 @@ car::action tcp_client::get_action()
 
   // Checks success or failure
   if (n < 0) {
-    // No data to read yet
+    // No data to read yet, just keep
     if (errno == EAGAIN || errno == EWOULDBLOCK) {
-      log::write(DEBUG, "No action from server yet");
+      // log::write(DEBUG, "No action from server yet");
+      return car::action::KEEP;
     }
     else {
       log::write(FAIL, std::strerror(errno));
