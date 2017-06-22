@@ -148,9 +148,14 @@ car::action predictor::update(car& c)
 
 void predictor::intersects(float &t0, float &tf, const car& c)
 {
-  if(c.speed > 0 && c.pos <= cross_vf) {
-    t0 = (cross_v0 - c.pos) / c.speed;
-    tf = (cross_vf + c.size - c.pos) / c.speed;
+  int cross0, crossf;
+
+  if(c.dir == car::HORIZONTAL) { cross0 = cross_h0; crossf = cross_hf; }
+  else { cross0 = cross_v0; crossf = cross_vf; }
+
+  if(c.speed > 0 && c.pos <= crossf) {
+    t0 = (float)(cross0 - c.pos) / (float)c.speed;
+    tf = (float)(crossf + c.size - c.pos) / (float)c.speed;
   } else {
     t0 = INF-1;
     tf = INF;
