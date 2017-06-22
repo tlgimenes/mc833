@@ -46,10 +46,12 @@ void client_car::self_update()
   std::chrono::duration<double> delta_update = now - last_update;
   last_update = now;
 
-  // Randomizes speed
-  speed += random::range(-accel, accel);
-  speed = std::max(0, speed);
-  speed = std::min(MAX_SPEED, speed);
+  // Randomizes speed with 1:100 chance
+  if (random::is_true(100)) {
+    speed += random::range(-accel, accel);
+    speed = std::max(0, speed);
+    speed = std::min(MAX_SPEED, speed);
+  }
 
   // Calculates delta position
   delta_pos += speed * delta_update.count();

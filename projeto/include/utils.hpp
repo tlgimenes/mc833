@@ -64,8 +64,8 @@ class random {
       return dis(gen);
     }
 
-    static bool is_true() {
-      return (random::range(0, 1) == 0);
+    static bool is_true(int ratio = 1) {
+      return (random::range(0, ratio) == 0);
     }
 
   private:
