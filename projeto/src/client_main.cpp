@@ -32,11 +32,11 @@ void create_client(std::vector<std::unique_ptr<client>> &clients, int port, std:
 
 int main(int argc, char** argv)
 {
-  // Sets verbose level. If compiled in debug mode, show all messages, else show only FAIL errors 
+  // Sets verbose level. If compiled in debug mode, show all messages, else show only FAIL errors
 #ifdef NDEBUG
-  log::level() = DEBUG;
-#else
   log::level() = FAIL;
+#else
+  log::level() = DEBUG;
 #endif
 
   // Checks given arguments
