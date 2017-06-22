@@ -28,10 +28,11 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-client::client(int port, const std::string& ip, int delay) :
+client::client(int port, const std::string& ip, int delay, std::string filename) :
   port(port), ip(ip), delay(delay)
 {
   is_waiting = false;
+  log_file.open(filename, std::fstream::out);
 }
 
 void client::send_car_info(car c)
@@ -45,10 +46,11 @@ car::action client::get_action()
   return car::action::KEEP;
 }
 
-void client::close_socket()
+void client::disconnect()
 {
-  // Closes socket
+  // Closes socket and file
   close(socket_fd);
+  log_file.close();
 }
 
 bool client::is_waiting_response()
@@ -65,6 +67,7 @@ void client::start_delay()
 void client::stop_delay()
 {
   is_waiting = false;
+  log_file << get_response_delay() << std::endl;
 }
 
 int client::get_response_delay()

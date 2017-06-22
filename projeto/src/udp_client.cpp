@@ -14,8 +14,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-udp_client::udp_client(int port, const std::string& ip, int delay) :
-  client(port, ip, delay)
+udp_client::udp_client(int port, const std::string& ip, int delay, std::string filename) :
+  client(port, ip, delay, filename)
 {
   host = gethostbyname(ip.c_str());
 

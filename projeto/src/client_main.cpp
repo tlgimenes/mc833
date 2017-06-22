@@ -10,14 +10,16 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void create_client(std::vector<std::unique_ptr<client>> &clients, int port, std::string hostname, int delay, std::string protocol_str, std::string type_str)
+void create_client(std::vector<std::unique_ptr<client>> &clients, int port, std::string hostname, int delay, std::string protocol_str, std::string type_str, int car_id)
 {
+  std::string filename = LOG_FILE_PREFIX + std::to_string(car_id) + "_" + type_str + "_" + protocol_str;
+
   if (protocol_str == "tcp") {
-    clients.emplace_back(new tcp_client(port, hostname, delay));
+    clients.emplace_back(new tcp_client(port, hostname, delay, filename));
     log::write(DEBUG, "Starting " + type_str + " as TCP client");
   }
   else if (protocol_str == "udp") {
-    clients.emplace_back(new udp_client(port, hostname, delay));
+    clients.emplace_back(new udp_client(port, hostname, delay, filename));
     log::write(DEBUG, "Starting " + type_str + " as UDP client");
   }
   else if (protocol_str == "none") {
@@ -51,12 +53,6 @@ int main(int argc, char** argv)
   int entertainment_delay = std::stoi(argv[6]);
   int comfort_delay = std::stoi(argv[7]);
 
-  // Initializes servers
-  std::vector<std::unique_ptr<client>> clients;
-  create_client(clients, SECURITY_PORT, hostname, security_delay, security_protocol, "security");
-  create_client(clients, ENTERTAINMENT_PORT, hostname, entertainment_delay, entertainment_protocol, "entertainment");
-  create_client(clients, COMFORT_PORT, hostname, comfort_delay, comfort_protocol, "comfort");
-
   // Randomizes car initial values
   int pos = random::range(0, 10);
   int speed = random::range(1, 3);
@@ -65,6 +61,12 @@ int main(int argc, char** argv)
 
   // Creates client car
   client_car cc(pos, speed, dir, size);
+
+  // Initializes servers
+  std::vector<std::unique_ptr<client>> clients;
+  create_client(clients, SECURITY_PORT, hostname, security_delay, security_protocol, "security", cc.id);
+  create_client(clients, ENTERTAINMENT_PORT, hostname, entertainment_delay, entertainment_protocol, "entertainment", cc.id);
+  create_client(clients, COMFORT_PORT, hostname, comfort_delay, comfort_protocol, "comfort", cc.id);
 
   while (true) {
     bool should_disconnect = false;
@@ -95,7 +97,7 @@ int main(int argc, char** argv)
 
   // Disconnect clients
   for (auto const &cli : clients) {
-    cli->close_socket();
+    cli->disconnect();
   }
 
   return EXIT_SUCCESS;

@@ -18,7 +18,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <chrono>
-#include <ratio>  
+#include <fstream>
 #include <string>
 #include <arpa/inet.h>
 #include "car.hpp"
@@ -29,6 +29,7 @@
 #define SECURITY_PORT 12345
 #define ENTERTAINMENT_PORT 12346
 #define COMFORT_PORT 12347
+#define LOG_FILE_PREFIX "../log/client_"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -36,11 +37,11 @@ class client
 {
   public:
     // Constructor
-    client(int port, const std::string& ip, int delay);
+    client(int port, const std::string& ip, int delay, std::string filename);
 
     virtual void send_car_info(car c);  // Send car info to server
     virtual car::action get_action();   // Get action from server
-    void close_socket();                // Close client socket
+    void disconnect();                  // Close client socket
     bool is_waiting_response();         // Is client waiting for server response
     int get_response_delay();           // Get server response delay in ms
     bool has_finished_delay();          // Has server delay time finished
@@ -54,6 +55,7 @@ class client
     struct hostent *host;         // Server host name
     struct sockaddr_in srv_addr;  // Server address
     std::chrono::high_resolution_clock::time_point delay_start; // When delay count started
+    std::ofstream log_file;       // File to log client information
 
     void start_delay(); // Start counting delay
     void stop_delay();  // Stop counting delay
@@ -67,7 +69,7 @@ class client
 class tcp_client: public client
 {
   public:
-    tcp_client(int port, const std::string& ip, int delay);
+    tcp_client(int port, const std::string& ip, int delay, std::string filename);
 
     void send_car_info(car c);  // Send car info to server
     car::action get_action();   // Get action from server
@@ -82,7 +84,7 @@ class tcp_client: public client
 class udp_client: public client
 {
   public:
-    udp_client(int port, const std::string& ip, int delay);
+    udp_client(int port, const std::string& ip, int delay, std::string filename);
 
     void send_car_info(car c);  // Send car info to server
     car::action get_action();   // Get action from server

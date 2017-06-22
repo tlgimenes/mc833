@@ -24,8 +24,6 @@ client_car::client_car(int pos, int speed, direction dir, int size) :
   car(pos, speed, dir, size)
 {
   last_update = std::chrono::high_resolution_clock::now();
-  std::string filename = LOG_FILE_PREFIX + std::to_string(id);
-  log_file.open("test.txt", std::fstream::out);
 }
 
 bool client_car::server_update(action ac)
