@@ -40,16 +40,16 @@ std::string car::action_to_string(car::action ac)
 
 car::action car::string_to_action(std::string str)
 {
-  if ("accel") {
+  if (str == "accel") {
     return car::action::ACCEL;
   }
-  else if ("ambulance") {
+  else if (str == "ambulance") {
     return car::action::AMBULANCE;
   }
-  else if ("break") {
+  else if (str == "break") {
     return car::action::BREAK;
   }
-  else if ("keep") {
+  else if (str == "keep") {
     return car::action::KEEP;
   }
   else {

@@ -35,17 +35,6 @@ client::client(int port, const std::string& ip, int delay, std::string filename)
   log_file.open(filename, std::fstream::out);
 }
 
-void client::send_car_info(car c)
-{
-  is_waiting = true;
-}
-
-car::action client::get_action()
-{
-  is_waiting = false;
-  return car::action::KEEP;
-}
-
 void client::disconnect()
 {
   // Closes socket and file

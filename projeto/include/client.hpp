@@ -39,12 +39,12 @@ class client
     // Constructor
     client(int port, const std::string& ip, int delay, std::string filename);
 
-    virtual void send_car_info(car c);  // Send car info to server
-    virtual car::action get_action();   // Get action from server
-    void disconnect();                  // Close client socket
-    bool is_waiting_response();         // Is client waiting for server response
-    int get_response_delay();           // Get server response delay in ms
-    bool has_finished_delay();          // Has server delay time finished
+    virtual void send_car_info(car c) = 0;  // Send car info to server
+    virtual car::action get_action() = 0;   // Get action from server
+    void disconnect();                      // Close client socket
+    bool is_waiting_response();             // Is client waiting for server response
+    int get_response_delay();               // Get server response delay in ms
+    bool has_finished_delay();              // Has server delay time finished
 
   protected:
     const int port;               // Server port
