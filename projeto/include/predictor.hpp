@@ -39,6 +39,10 @@ class predictor
   protected:
     void intersects(float &t0, float &tf, const car& c);
 
+    enum position_level_t { BEFORE_CROSSING, IN_CROSSING, AFTER_CROSSING, OUT_OF_BOUNDS };
+
+    enum position_level_t position_level(const car& c);
+
   public:
     std::map<int, car> cars_h, cars_v;
 

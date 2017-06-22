@@ -80,16 +80,57 @@ inline bool are_intervals_disjoint(float I00, float I0f, float I10, float I1f)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-car::action predictor::update(car& c) 
+enum predictor::position_level_t predictor::position_level(const car& c)
 {
-  // Check if should always send keep action
-  if (always_keep) {
-    return car::KEEP;
+  int x0=0, xx0, xxf, xf;
+  if(c.dir == car::HORIZONTAL) { 
+    xx0 = cross_h0; 
+    xxf = cross_hf; 
+    xf = max_h; 
+  }
+  else {
+    xx0 = cross_v0; 
+    xxf = cross_vf; 
+    xf = max_v; 
   }
 
+  if(c.pos < x0) return predictor::OUT_OF_BOUNDS;
+  if(x0 <= c.pos && c.pos <= xx0) return predictor::BEFORE_CROSSING;
+  if(xx0 < c.pos && c.pos < c.size + xxf) return predictor::IN_CROSSING;
+  if(xxf + c.size < c.pos && c.pos < xf) return predictor::AFTER_CROSSING;
+  if(c.pos >= xf) return predictor::OUT_OF_BOUNDS;
+
+  return predictor::OUT_OF_BOUNDS;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+car::action predictor::update(car& c) 
+{
+  auto& array_c_belongs = (c.dir == car::HORIZONTAL) ? cars_h : cars_v;
+  auto& array_c_not_belongs = (c.dir == car::HORIZONTAL) ? cars_v : cars_h;
   std::vector<float> t0(car::accel*2+1), tf(car::accel*2+1);
   std::vector<float> t0_col, tf_col;
   int speed0 = c.speed;
+  auto pl = position_level(c);
+
+  // Car need to be on the array
+  assert(array_c_belongs.find(c.id) != array_c_belongs.end());
+  // Updates car C's array
+  array_c_belongs.find(c.id)->second = c;
+
+  if (always_keep) return car::KEEP;// Check if should always send keep action
+  if (pl == predictor::OUT_OF_BOUNDS) { // If after crossing, disconnect
+    remove_car(c);
+    return car::DISCONNECT;
+  }
+
+  if(pl == predictor::IN_CROSSING) {
+    for(auto& cr: array_c_not_belongs) {
+      if(position_level(cr.second) == predictor::IN_CROSSING)
+        return car::AMBULANCE;
+    }
+  }
 
   // Gets possible intervals for car c to cross the crossing
   intersects(t0[0], tf[0], c);
@@ -102,8 +143,7 @@ car::action predictor::update(car& c)
   float min_t0 = *(t0.end()-2), max_tf = *(tf.end()-1);
 
   // Gets the possible collisions
-  auto& cars = (c.dir == car::HORIZONTAL) ? cars_v : cars_h;
-  for(auto& c: cars) {
+  for(auto& c: array_c_not_belongs) {
     float t00 = t0s.find(c.second.id)->second;
     float tff = tfs.find(c.second.id)->second;
 
@@ -129,8 +169,7 @@ car::action predictor::update(car& c)
         c.speed = speed0 + ((i%2) ? ((i+1)/2) : -((i+1)/2));
 
         // Update car values
-        if(c.dir == car::HORIZONTAL) cars_h.find(c.id)->second = c;
-        else cars_v.find(c.id)->second = c;
+        array_c_belongs.find(c.id)->second = c;
 
         // returns action
         if(c.speed > speed0) return car::ACCEL;
@@ -140,8 +179,8 @@ car::action predictor::update(car& c)
     }
   }
 
-  // No solution found, call the ambulance :(
-  return car::AMBULANCE;
+  // No solution found, try breaking
+  return car::BREAK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

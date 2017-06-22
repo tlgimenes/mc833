@@ -86,13 +86,13 @@ int main(int argc, char** argv)
       pred.add_car(c);
     }
 
+    // Updates predictor and gets action
+    car::action ac = pred.update(c);
+
     // Draws prediction if not on debug mode and is security server
     if (type == server::application::SECURITY) {
       pred.draw();
     }
-
-    // Updates predictor and gets action
-    car::action ac = pred.update(c);
 
     // Sends action to car
     srv->send_action(ac);

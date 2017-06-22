@@ -29,7 +29,7 @@ class car
 {
   public:
     // Action for car to take
-    enum action {ACCEL, BREAK, KEEP, AMBULANCE}; 
+    enum action {ACCEL, BREAK, KEEP, AMBULANCE, DISCONNECT}; 
     // Car direction
     enum direction {HORIZONTAL, VERTICAL};
 
