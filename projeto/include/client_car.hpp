@@ -29,7 +29,7 @@ class client_car: public car
     // Constructor
     client_car(int pos, int speed, direction dir, int size=1);
 
-    void server_update(action ac);  // Update based on action
+    bool server_update(action ac);  // Update based on action
     void self_update();             // Update own position
 
   private:

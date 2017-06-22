@@ -67,6 +67,8 @@ int main(int argc, char** argv)
   client_car cc(pos, speed, dir, size);
 
   while (true) {
+    bool should_disconnect = false;
+
     for (auto const &cli : clients) {
       // Sends own information to server
       if (!cli->is_waiting_response()) {
@@ -74,12 +76,26 @@ int main(int argc, char** argv)
       }
       // Waits for action from server
       else if (cli->has_finished_delay()) {
+        // Gets action from server
         car::action ac = cli->get_action();
-        cc.server_update(ac);
+
+        // Update car with server info and checks if should disconnect
+        if ((should_disconnect = cc.server_update(ac))) break;
       }
+
+      // Break loop if should disconnect
+      if (should_disconnect) {
+        break;
+      }
+
       // Self updates position
       cc.self_update();
     }
+  }
+
+  // Disconnect clients
+  for (auto const &cli : clients) {
+    cli->close_socket();
   }
 
   return EXIT_SUCCESS;

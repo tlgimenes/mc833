@@ -24,16 +24,19 @@ client_car::client_car(int pos, int speed, direction dir, int size) :
   car(pos, speed, dir, size)
 {
   last_update = std::chrono::high_resolution_clock::now();
+  std::string filename = LOG_FILE_PREFIX + std::to_string(id);
+  log_file.open("test.txt", std::fstream::out);
 }
 
-void client_car::server_update(action ac)
+bool client_car::server_update(action ac)
 {
   switch (ac) {
     case car::action::ACCEL: speed += accel; break;
     case car::action::BREAK: speed -= accel; break;
-    case car::action::AMBULANCE: exit(EXIT_SUCCESS);
+    case car::action::AMBULANCE: return true;
     case car::action::KEEP: default: break;
   }
+  return false;
 }
 
 void client_car::self_update()
