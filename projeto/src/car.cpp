@@ -33,6 +33,7 @@ std::string car::action_to_string(car::action ac)
   switch (ac) {
     case car::action::ACCEL: return "accel";
     case car::action::AMBULANCE: return "ambulance";
+    case car::action::DISCONNECT: return "disconnect";
     case car::action::BREAK: return "break";
     case car::action::KEEP: default: return "keep";
   }
@@ -45,6 +46,9 @@ car::action car::string_to_action(std::string str)
   }
   else if (str == "ambulance") {
     return car::action::AMBULANCE;
+  }
+  else if (str == "disconnect") {
+    return car::action::DISCONNECT;
   }
   else if (str == "break") {
     return car::action::BREAK;

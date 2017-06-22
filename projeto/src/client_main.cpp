@@ -85,13 +85,13 @@ int main(int argc, char** argv)
         if ((should_disconnect = cc.server_update(ac))) break;
       }
 
-      // Break loop if should disconnect
-      if (should_disconnect) {
-        break;
-      }
-
       // Self updates position
       cc.self_update();
+    }
+
+    // Break loop if should disconnect
+    if (should_disconnect) {
+      break;
     }
   }
 
