@@ -32,6 +32,7 @@ bool client_car::server_update(action ac)
     case car::action::ACCEL: speed += accel; break;
     case car::action::BREAK: speed -= accel; break;
     case car::action::AMBULANCE: return true;
+    case car::action::DISCONNECT: return true;
     case car::action::KEEP: default: break;
   }
   return false;
