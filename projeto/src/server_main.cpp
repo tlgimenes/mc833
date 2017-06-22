@@ -87,7 +87,7 @@ int main(int argc, char** argv)
     }
 
     // Draws prediction if not on debug mode and is security server
-    if (log::level() != DEBUG && type == server::application::SECURITY) {
+    if (type == server::application::SECURITY) {
       pred.draw();
     }
 
