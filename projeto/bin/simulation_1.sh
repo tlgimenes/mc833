@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./simulate.sh 2 udp tcp udp 10 100 250
+./simulate.sh 4 tcp udp udp 10 100 250
