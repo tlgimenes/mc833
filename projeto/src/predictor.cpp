@@ -153,14 +153,10 @@ void predictor::update(std::vector<std::pair<int, car::action>>& ac, car& c)
   if(pl == predictor::IN_CROSSING) {
     for(auto& cr: array_c_not_belongs) {
       if(position_level(cr.second) == predictor::IN_CROSSING) {
-        ac.push_back(std::make_pair(cr.second.id, car::AMBULANCE));
-        remove_car(cr.second.id);
+        ac.push_back(std::make_pair(c.id, car::AMBULANCE));
+        remove_car(c);
+        return;
       }
-    }
-    if(ac.size() > 0) {
-      ac.push_back(std::make_pair(c.id, car::AMBULANCE));
-      remove_car(c);
-      return;
     }
   }
 

@@ -69,8 +69,6 @@ int main(int argc, char** argv)
   create_client(clients, COMFORT_PORT, hostname, comfort_delay, comfort_protocol, "comfort", cc.id);
 
   while (true) {
-    bool should_disconnect = false;
-
     for (auto const &cli : clients) {
       // Sends own information to server
       if (!cli->is_waiting_response()) {
@@ -82,22 +80,16 @@ int main(int argc, char** argv)
         car::action ac = cli->get_action();
 
         // Update car with server info and checks if should disconnect
-        if ((should_disconnect = cc.server_update(ac))) break;
+        if (cc.server_update(ac)) { // should disconnect
+          for (auto const &cli : clients) cli->disconnect(); // Disconnect clients
+
+          return EXIT_SUCCESS;
+        }
       }
 
       // Self updates position
       cc.self_update();
     }
-
-    // Break loop if should disconnect
-    if (should_disconnect) {
-      break;
-    }
-  }
-
-  // Disconnect clients
-  for (auto const &cli : clients) {
-    cli->disconnect();
   }
 
   return EXIT_SUCCESS;

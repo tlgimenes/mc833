@@ -7,7 +7,6 @@ CDEP=car.o client_car.o client.o tcp_client.o udp_client.o utils.o
 CBIN=client_main
 
 all: $(SBIN) $(CBIN)
-	mkdir ../log
 
 $(SBIN): ../src/$(SBIN).cpp $(SDEP) Makefile
 	$(CC) $(CXXFLAGS) -I../include $(SDEP) ../src/$(SBIN).cpp -o $(SBIN)
