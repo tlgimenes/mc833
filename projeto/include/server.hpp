@@ -18,7 +18,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <arpa/inet.h>
+#include <map>
+
 #include "car.hpp"
+#include "predictor.hpp"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -42,7 +45,7 @@ class server
     server(int port, application type, int delay, protocol prot);
 
     virtual car get_car_info();               // Get car info from client
-    virtual void send_action(car::action ac); // Send action to client
+    virtual void send_action(std::vector<std::pair<int, car::action>>& acs); // Send action to client
     void close_socket();                      // Close server socket
 
   protected:
@@ -65,8 +68,8 @@ class tcp_server: public server
     // Constructor
     tcp_server(int port, application type, int delay);
 
-    car get_car_info();               // Get car info from client
-    void send_action(car::action ac); // Send action to client
+    car get_car_info(); // Get car info from client
+    void send_action(std::vector<std::pair<int, car::action>>& acs); // Send action to client
 
   private:
     int max_fd;
@@ -82,6 +85,9 @@ class tcp_server: public server
     void tcp_listen();
     int tcp_accept();
     bool check_clients();
+
+    std::map<int, int> id_fd;
+    std::map<int, int> fd_id;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -93,11 +99,13 @@ class udp_server: public server
     udp_server(int port, application type, int delay);
 
     car get_car_info();               // Get car info from client
-    void send_action(car::action ac); // Send action to client
+    void send_action(std::vector<std::pair<int, car::action>>& acs); // Send action to client
 
   private:
     void udp_socket();
     void udp_bind();
+
+    std::map<int, struct sockaddr_in> id_addr;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

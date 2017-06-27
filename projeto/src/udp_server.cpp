@@ -40,27 +40,32 @@ car udp_server::get_car_info()
     std::string car_str(buf);
     car new_car = car(car_str);
     log::write(DEBUG, "Received car from client: " + car_str);
+ 
+    id_addr[new_car.id] = cli_addr;
 
     // Returns client car
     return new_car;
   }
 }
 
-void udp_server::send_action(car::action ac)
+void udp_server::send_action(std::vector<std::pair<int, car::action>> &acs)
 {
-  // Send action to car as string
-  std::string ac_str = car::action_to_string(ac);
-  strncpy(buf, ac_str.c_str(), MAX_LINE);
-  int str_len = sizeof(char) * ac_str.length();
-  ssize_t n = sendto(socket_fd, buf, str_len, 0, (const struct sockaddr *)&cli_addr, cli_len);
+  for(auto& ac: acs) {
+    struct sockaddr_in c_addr = id_addr[ac.first];
+    // Send action to car as string
+    std::string ac_str = car::action_to_string(ac.second);
+    strncpy(buf, ac_str.c_str(), MAX_LINE);
+    int str_len = sizeof(char) * ac_str.length();
+    ssize_t n = sendto(socket_fd, buf, str_len, 0, (const struct sockaddr *)&c_addr, cli_len);
 
-  // Checks success or failure
-  if (n >= 0) {
-    log::write(DEBUG, "Wrote " + std::to_string(n) + " bytes to client");
-    log::write(DEBUG, "Sent action to client: " + ac_str);
-  }
-  else {
-    log::write(FAIL, std::strerror(errno));
+    // Checks success or failure
+    if (n >= 0) {
+      log::write(DEBUG, "Wrote " + std::to_string(n) + " bytes to client");
+      log::write(DEBUG, "Sent action to client: " + ac_str);
+    }
+    else {
+      log::write(FAIL, std::strerror(errno));
+    }
   }
 }
 

@@ -14,6 +14,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "predictor.hpp"
+#include "utils.hpp"
 
 #include <cassert>
 #include <vector>
@@ -29,6 +30,10 @@
 predictor::predictor(int cross_h0, int cross_hf, int cross_v0, int cross_vf, bool always_keep) : 
   cross_h0(cross_h0), cross_hf(cross_hf), cross_v0(cross_v0), cross_vf(cross_vf), always_keep(always_keep)
 {
+#ifdef NDEBUG
+  std::cout << "\033[?25l\033[2J" << std::endl;
+#endif
+
   assert(cross_h0 < cross_hf && cross_v0 < cross_vf);
   assert(cross_hf < max_h && cross_vf < max_v);
 }
@@ -57,6 +62,21 @@ void predictor::remove_car(const car& c)
 
   t0s.erase(t0s.find(c.id));
   tfs.erase(tfs.find(c.id));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void predictor::remove_car(int car_id) 
+{
+  auto it = cars_h.find(car_id);
+
+  if(it != cars_h.end()) cars_h.erase(it);
+  else if((it=cars_v.find(car_id)) != cars_v.end()) cars_v.erase(it);
+  else
+    log::write(FAIL, "Fail to delete car "+std::to_string(car_id));
+
+  t0s.erase(t0s.find(car_id));
+  tfs.erase(tfs.find(car_id));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -97,7 +117,7 @@ enum predictor::position_level_t predictor::position_level(const car& c)
   if(c.pos < x0) return predictor::OUT_OF_BOUNDS;
   if(x0 <= c.pos && c.pos <= xx0) return predictor::BEFORE_CROSSING;
   if(xx0 < c.pos && c.pos < c.size + xxf) return predictor::IN_CROSSING;
-  if(xxf + c.size < c.pos && c.pos < xf) return predictor::AFTER_CROSSING;
+  if(xxf + c.size <= c.pos && c.pos < xf) return predictor::AFTER_CROSSING;
   if(c.pos >= xf) return predictor::OUT_OF_BOUNDS;
 
   return predictor::OUT_OF_BOUNDS;
@@ -105,7 +125,7 @@ enum predictor::position_level_t predictor::position_level(const car& c)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-car::action predictor::update(car& c) 
+void predictor::update(std::vector<std::pair<int, car::action>>& ac, car& c) 
 {
   auto& array_c_belongs = (c.dir == car::HORIZONTAL) ? cars_h : cars_v;
   auto& array_c_not_belongs = (c.dir == car::HORIZONTAL) ? cars_v : cars_h;
@@ -119,16 +139,28 @@ car::action predictor::update(car& c)
   // Updates car C's array
   array_c_belongs.find(c.id)->second = c;
 
-  if (always_keep) return car::KEEP;// Check if should always send keep action
-  if (pl == predictor::OUT_OF_BOUNDS) { // If after crossing, disconnect
+  if (always_keep) {// Check if should always send keep action
+    ac.push_back(std::make_pair(c.id, car::KEEP));
+    return;
+  }
+  if (pl == predictor::OUT_OF_BOUNDS) { // If after map, disconnect
     remove_car(c);
-    return car::DISCONNECT;
+    log::write(DEBUG, "Disconnect car "+std::to_string(c.id));
+    ac.push_back(std::make_pair(c.id, car::DISCONNECT));
+    return;
   }
 
   if(pl == predictor::IN_CROSSING) {
     for(auto& cr: array_c_not_belongs) {
-      if(position_level(cr.second) == predictor::IN_CROSSING)
-        return car::AMBULANCE;
+      if(position_level(cr.second) == predictor::IN_CROSSING) {
+        ac.push_back(std::make_pair(cr.second.id, car::AMBULANCE));
+        remove_car(cr.second.id);
+      }
+    }
+    if(ac.size() > 0) {
+      ac.push_back(std::make_pair(c.id, car::AMBULANCE));
+      remove_car(c);
+      return;
     }
   }
 
@@ -154,7 +186,10 @@ car::action predictor::update(car& c)
   }
 
   // In case no other car to hit, keep
-  if(t0_col.size() == 0) return car::KEEP;
+  if(t0_col.size() == 0) { 
+    ac.push_back(std::make_pair(c.id, car::KEEP));
+    return;
+  }
 
   // Checks if there is a solution without crash for the problem
   for(int i=0; i < (int)t0.size(); i++) {
@@ -172,15 +207,19 @@ car::action predictor::update(car& c)
         array_c_belongs.find(c.id)->second = c;
 
         // returns action
-        if(c.speed > speed0) return car::ACCEL;
-        else if(c.speed < speed0) return car::BREAK;
-        else return car::KEEP;
+        if(c.speed > speed0) ac.push_back(std::make_pair(c.id, car::ACCEL));
+        else if(c.speed < speed0) ac.push_back(std::make_pair(c.id, car::BREAK));
+        else ac.push_back(std::make_pair(c.id, car::KEEP));
+
+        return;
       }
     }
   }
 
   // No solution found, try breaking
-  return car::BREAK;
+  ac.push_back(std::make_pair(c.id, car::BREAK)); 
+
+  return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -227,7 +266,9 @@ void predictor::draw()
     map2D[car.second.pos*scale_v][cross_h0*scale_h+1] = '#';
   }
  
-  //std::cout << "\x1B[2J\x1B[H";
+#ifdef NDEBUG
+  std::cout << "\033[1;1H" << std::endl;
+#endif
   for(auto& line: map2D) {
     for(auto& elem: line) {
       std::cout << elem;

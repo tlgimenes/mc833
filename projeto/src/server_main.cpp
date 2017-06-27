@@ -55,6 +55,9 @@ int main(int argc, char** argv)
     log::write(FAIL, "Invalid type: use 'security', 'entertainment' or 'comfort'");
   }
 
+  // Initializes predictor
+  predictor pred(50, 60, 60, 74, ignore_prediction);
+
   // Initializes TCP or UDP server
   std::unique_ptr<server> srv;
   if (protocol_str == "tcp") {
@@ -73,8 +76,7 @@ int main(int argc, char** argv)
     log::write(FAIL, "Invalid protocol: use 'tcp', 'udp' or 'none'");
   }
 
-  // Initializes predictor
-  predictor pred(50, 60, 60, 74, ignore_prediction);
+  std::vector<std::pair<int, car::action>> actions;
 
   // Main server loop
   while (true) {
@@ -87,15 +89,18 @@ int main(int argc, char** argv)
     }
 
     // Updates predictor and gets action
-    car::action ac = pred.update(c);
+    pred.update(actions, c);
 
-    // Draws prediction if not on debug mode and is security server
+    // Draws prediction if is security server
     if (type == server::application::SECURITY) {
       pred.draw();
     }
 
     // Sends action to car
-    srv->send_action(ac);
+    srv->send_action(actions);
+    
+    // Clears actions
+    actions.clear();
   }
 
   // Close server sockets

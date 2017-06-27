@@ -50,8 +50,9 @@ class predictor
 
     void add_car(const car& c);
     void remove_car(const car& c);
+    void remove_car(int car_id);
 
-    car::action update(car& c);
+    void update(std::vector<std::pair<int, car::action>>& ac, car& c);
 
     bool exists(const car& c) const;
 

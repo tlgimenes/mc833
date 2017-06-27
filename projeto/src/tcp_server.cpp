@@ -70,6 +70,9 @@ car tcp_server::get_car_info()
         }
         // Closes connection if client has disconnected
         else if (n == 0 || errno == ECONNRESET) {
+          int car_id = fd_id[client_fd];
+          fd_id.erase(fd_id.find(client_fd));
+          id_fd.erase(id_fd.find(car_id));
           close(client_fd);
           FD_CLR(client_fd, &all_fds);
           clients[cli_index] = -1;
@@ -86,6 +89,8 @@ car tcp_server::get_car_info()
         log::write(DEBUG, "Received car from client: " + car_str);
 
         // Returns client car
+        id_fd[new_car.id] = client_fd ;
+        fd_id[client_fd ] = new_car.id;
         cli_index++;
         return new_car;
 
@@ -144,21 +149,24 @@ bool tcp_server::check_clients()
   return true;
 }
 
-void tcp_server::send_action(car::action ac)
+void tcp_server::send_action(std::vector<std::pair<int, car::action>> &acs)
 {
-  // Send action to car as string
-  std::string ac_str = car::action_to_string(ac);
-  strncpy(buf, ac_str.c_str(), MAX_LINE);
-  int str_len = sizeof(char) * ac_str.length();
-  int n = write(client_fd, buf, str_len);
+  for(auto& ac: acs) {
+    int fd = id_fd[ac.first];
+    // Send action to car as string
+    std::string ac_str = car::action_to_string(ac.second);
+    strncpy(buf, ac_str.c_str(), MAX_LINE);
+    int str_len = sizeof(char) * ac_str.length();
+    int n = write(fd, buf, str_len);
 
-  // Checks success or failure
-  if (n >= 0) {
-    log::write(DEBUG, "Wrote " + std::to_string(n) + " bytes to client");
-    log::write(DEBUG, "Sent action to client: " + ac_str);
-  }
-  else {
-    log::write(FAIL, std::strerror(errno));
+    // Checks success or failure
+    if (n >= 0) {
+      log::write(DEBUG, "Wrote " + std::to_string(n) + " bytes to client");
+      log::write(DEBUG, "Sent action to client["+std::to_string(fd)+"]: " + ac_str);
+    }
+    else {
+      log::write(FAIL, std::strerror(errno));
+    }
   }
 }
 

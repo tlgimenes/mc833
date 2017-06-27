@@ -23,8 +23,9 @@ car server::get_car_info()
   return new_car;
 }
 
-void server::send_action(car::action ac)
+void server::send_action(std::vector<std::pair<int, car::action>>& acs)
 {
+  log::write(FAIL, "Not Implemented Error");
 }
 
 void server::close_socket()
